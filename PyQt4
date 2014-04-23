@@ -1,0 +1,58 @@
+DebianにPyQt4入れようとしてはまったのでメモ
+初心者が見様見真似でやったので信頼性低いです
+
+OS : Debian 7.0　wheezy
+Python : 3.4.0
+
+まずpython3.4のインストールから
+http://www.unixmen.com/howto-install-python-3-x-in-ubuntu-debian-fedora-centos/
+ここを参考にpython3.4をインストール。
+
+pythonの公式サイトからtarをダウンロードして展開。
+展開したディレクトリに入る。
+
+$ cd Python-3.4.0 <-ダウンロードしたバージョンに合わせて変える
+$ ./configure --prefix=/opt/python3
+$ make
+$ su
+$ make install
+
+.bashrcに以下を追加
+export PATH=$PATH:/opt/python3/bin
+
+これで多分python3が動く
+
+次にQtを入れる。名古屋大の先生のページを参考にさせていただきました。
+$ aptitude install ibqt4-opengl-dev qt4-dev-tools qt4-doc
+
+PyQt4をmakeしている最中にエラーでてQtが入ってないことに気づいた。
+はずかしい。
+
+あとはRiverbankのドキュメントを参考にごりごりとインストールしていく。
+http://pyqt.sourceforge.net/Docs/PyQt4/
+SIPも事前にインストールする必要あり。
+
+$ python3 configure-ng.py
+
+をしたときに
+Unable to find the qmake configuration file
+こんな感じのエラーがでたので
+http://stackoverflow.com/questions/6906856/error-installing-pyqt
+を参考にSynapticパッケージマネージャでlibqt4-devをインストールして再実行。
+
+無事にmakeが通り完成！
+PyQt-x11-gpl-4.10.4の中にexamplesがあるのでimportできるか確認してみると
+いいかもしれません。
+
+参考まとめ
+・Pythonのインストール
+http://www.unixmen.com/howto-install-python-3-x-in-ubuntu-debian-fedora-centos/
+・Qt
+名古屋大の先生のページが出てきたのでそこを参考にしました。
+・PyQt3
+http://pyqt.sourceforge.net/Docs/PyQt4/installation.html#downloading-pyqt4
+http://stackoverflow.com/questions/6906856/error-installing-pyqt
+
+
+
+
