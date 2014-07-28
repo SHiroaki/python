@@ -30,3 +30,5 @@ toolbox.register("select", tools.selTournament, turnsize=3)
 toolbox.register("evaluate", evaluateInd)
 
 
+
+

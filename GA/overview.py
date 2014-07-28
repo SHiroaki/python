@@ -1,6 +1,11 @@
+# -*- coding: utf-8 -*-
+
+import random
+import numpy as np
+
 from deap import base, creator
 from deap import tools
-import random
+
 
 #Types
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,)) # do not forget ","
@@ -15,10 +20,19 @@ toolbox.register("individual", tools.initRepeat, creator.Individual,
 
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
-#Operators
+#Statistics
+stats = tools.Statistics(key=lambda ind: ind.fitness.values)
+stats.register("avg", np.mean, axis=0)
+stats.register("std", np.std, axis=0)
+stats.register("min", np.min, axis=0)
+stats.register("max", np.max, axis=0)
+
+
+#Evaluate function
 def evaluate(individual):
     return sum(individual), # do not forget ","
 
+#Operators
 toolbox.register("mate", tools.cxTwoPoint)
 toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=1, indpb=0.1)
 toolbox.register("select", tools.selTournament, tournsize=3)
