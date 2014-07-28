@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "/home/hiroakisuzuki/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/pudb/__init__.py", line 77, in runscript
+    dbg._runscript(mainpyfile)
+  File "/home/hiroakisuzuki/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/pudb/debugger.py", line 371, in _runscript
+    self.run(statement, globals=globals_, locals=locals_)
+  File "/home/hiroakisuzuki/Canopy/appdata/canopy-1.4.1.1975.rh5-x86_64/lib/python2.7/bdb.py", line 400, in run
+    exec cmd in globals, locals
+  File "<string>", line 1, in <module>
+  File "optimization.py", line 197, in <module>
+    s = geneticoptimize(domain, schedulecost)
+  File "optimization.py", line 171, in geneticoptimize
+    scores = [(costf(v), v) for v in pop] #適応度を計算
+  File "optimization.py", line 54, in schedulecost
+    for d in xrange(len(sol)/2):
+TypeError: object of type 'NoneType' has no len()
