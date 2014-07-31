@@ -11,7 +11,8 @@ class LogBook(dict):
     def __init__(self, headers, functions, segment):
         """genticlog(dict)を定義.
         保存したい値の名前のリストとその値を計算するための関数を受け取る.
-        (gen, 世代)をキー、保存する値と関数をタプルに持つリストをvalueに登録"""
+        (gen, 世代)をキー、保存する値と関数をタプルに持つリストをvalueに登録.
+         引数が複数の場合はどうする?"""
         
         self.geneticlog = {}
         self.headerlist = headers
@@ -35,36 +36,46 @@ class LogBook(dict):
             self.generation_num = generation_number #あとで使うから登録しとく
             self.geneticlog[(LogBook.gen_string, generation_number)] = zip(
                 self.headerlist, self.functionlist)
-
             
     def record(self, *values):
         """辞書に適応度、表現型などの値のリスト
         (任意の数)を受け取り登録済みの関数に適応する.
         valuesは値のリストのタプルになる"""
         
-
         #リスト以外のデータ構造があったらエラーを上げる
-        self.listornot = [isinstance(x, list) for x in values]
+        self.listornot = [isinstance(x, (list, tuple)) for x in values]
 
         if False in self.listornot:
             raise TypeError ("Record values included"
-                             " in the type of non-list.")
+                             " in the type of non-list or tuple.")
         else:
             # g世代のvalue(ヘッダー,計算する関数)を取り出す
             self.each_generation_value = self.geneticlog.setdefault(
                 (LogBook.gen_string, self.generation_num), None)
 
-            """for key, func in self.functions.iteritems():
-                entry[key] = func(values)"""
-            
             for i, tup in enumerate(self.each_generation_value):
-                #関数を実行
+                #関数を実行.関数の引数が複数個の場合はタプルで渡して
+                #実行時に展開する
                 dseg = self.datasegment[i]
                 c = values[dseg]
-                calcdata = [x[0] for x in c]
-                header = tup[0]
-                func = tup[1]
-                self.res.append((header, func(calcdata)))
+                if isinstance(c, list): 
+                    #リストで来る場合はまず適応度リスト
+                    #適応度は１要素のタプルだから平坦にする
+                    calcdata = [x[0] for x in c] 
+                    header = tup[0]
+                    func = tup[1]
+                    self.res.append((header, func(calcdata)))
+
+                elif isinstance(c, tuple):
+                    #タプルで来る場合は複数の引数を持つ関数
+                    calcdata = c
+                    header = tup[0]
+                    func = tup[1]
+                    self.res.append((header, func(*calcdata)))
+                
+                else:
+                    raise TypeError ("%s : Unreceivable data type." % 
+                                     type(values))                    
 
             self.geneticlog[(LogBook.gen_string, 
                              self.generation_num)] = self.res

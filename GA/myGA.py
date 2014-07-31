@@ -3,12 +3,18 @@
 import time
 import math
 import random
+
 import numpy as np
+
 import optimization as opt
+
 import matplotlib.pyplot as plt
+
 from StatisticsGA import LogBook
 from deap import base, creator
 from deap import tools
+
+from scoop import futures
 
 
 #Types
@@ -24,13 +30,13 @@ toolbox = base.Toolbox()
 toolbox.register("attribute", random.randint, INT_MIN, INT_MAX) #0~9の間の整数
 toolbox.register("individual", tools.initRepeat, creator.Individual,
                     toolbox.attribute, n=IND_SIZE)
-
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+toolbox.register("map", futures.map)  #並列化.効いてるのか？
 
 #log setting
-logbook_header = ["avg", "std", "min", "max"]
-logbook_func = [np.mean, np.std, np.min, np.max]
-data_segment = [0,0,0,0] #recordでわたすデータの何番目のリストを使うか指定 
+logbook_header = ["avg", "std", "min", "max", "bestind"]
+logbook_func = [np.mean, np.std, np.min, np.max, tools.selBest]
+data_segment = [0,0,0,0,1] #recordでわたすデータの何番目のリストを使うか指定 
 logbook = LogBook(logbook_header, logbook_func, data_segment)
 logbook.printheaders()
 
@@ -42,16 +48,17 @@ toolbox.register("mutate", tools.mutUniformInt, low=0, up=9, indpb=0.2)
 toolbox.register("select", tools.selTournament, tournsize=3)
 toolbox.register("evaluate", opt.schedulecost)  #評価関数も必ずタプルで返す。中身はfloatにする
 
-
 #Algorithms
 def main():
-    """Complete generational algorithm"""
+    """Complete generational algorithm
+    toolbox.mapを使うとジェネレータが帰ってくる"""
 
     pop = toolbox.population(n=100)
     CXPB, MUTPB, NGEN = 0.7, 0.2, 100
     
     #初期個体の評価
-    fitnesses = map(toolbox.evaluate, pop) #[(6782,),(2342,)...]になってる
+    fitnesses = toolbox.map(toolbox.evaluate, pop) #[(6782,),(2342,)...]になってる
+    print "first para"
     """
     >>> map((lambda x,y: x*y),[1,2,3,4],[2,3,4,5])
     [2, 6, 12, 20]
@@ -67,16 +74,24 @@ def main():
         logbook.add_dictionary(g)
         #すべての個体の適応度をリストにまとめる
         fits = [ind.fitness.values for ind in pop]
-        logbook.record(fits, [1,2,3]) # recordに渡す値は実行する関数と対応
+
+        # recordに渡す値は実行する関数と対応
+        #関数の引数が複数の場合は(データ、引数)で渡す
+        logbook.record(fits, (pop, 1)) 
 
         #評価値に従って個体を選択
         offspring = toolbox.select(pop, len(pop))
         #Clone the selected individuals
-        offspring = map(toolbox.clone, offspring)
+        offspring = toolbox.map(toolbox.clone, offspring)
+        print "2 para"
+        print type(offspring)
+        
 
         #Apply crossover and mutation on the offspring
         # 偶数番目と奇数番目の個体を取り出して交差
+        print "2.1 para"
         for child1, child2 in zip(offspring[::2], offspring[1::2]):
+            print "2.2 para"
             if random.random() < CXPB:
                 toolbox.mate(child1, child2)
                 del child1.fitness.values
@@ -89,8 +104,10 @@ def main():
 
         #Evaluate the individuals with an invalid fitness
         #ここでinvalid_indにfloatが混じってる->mutateを変更で大丈夫になった
+        #offspringの型がかわってるかも
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-        fitnesses = map(toolbox.evaluate, invalid_ind)
+        fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+        print "3 para"
         
         #評価されていない個体を評価する.
         for ind, fit in zip(invalid_ind, fitnesses):
@@ -98,11 +115,16 @@ def main():
 
         #The population is entirely replaced by the offspring
         pop[:] = offspring
+
+    return logbook
+
+if __name__ == "__main__":
+    logdata = main()
     
     #Plotting graph
-    gen = logbook.select("gen")
-    fit_mins = logbook.select("min")
-    fit_avgs = logbook.select("avg")
+    gen = logdata.select("gen")
+    fit_mins = logdata.select("min")
+    fit_avgs = logdata.select("avg")
 
     fig, ax1 = plt.subplots()
     line1 = ax1.plot(gen, fit_mins, "b-", label="Minmum Fitness")
@@ -117,11 +139,5 @@ def main():
     lns = line1 + line2
     labs = [l.get_label() for l in lns]
     ax1.legend(lns, labs, loc="center right")
-
-    return tools.selBest(pop, 1)
-
-if __name__ == "__main__":
-    bestpop = main()
-    print opt.printschedule(bestpop)
     plt.show()
     
