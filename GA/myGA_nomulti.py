@@ -14,8 +14,6 @@ from StatisticsGA import LogBook
 from deap import base, creator
 from deap import tools
 
-from scoop import futures
-
 
 #Types
 #評価関数が最小の組み合わせを求めるからweights=-1
@@ -31,7 +29,6 @@ toolbox.register("attribute", random.randint, INT_MIN, INT_MAX) #0~9の間の整
 toolbox.register("individual", tools.initRepeat, creator.Individual,
                     toolbox.attribute, n=IND_SIZE)
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
-toolbox.register("map", futures.map)  #並列化.効いてるのか？
 
 #log setting
 logbook_header = ["avg", "std", "min", "max", "bestind"]
@@ -55,9 +52,10 @@ def main():
 
     pop = toolbox.population(n=100)
     CXPB, MUTPB, NGEN = 0.7, 0.2, 100
+    elite = 0.2
     
     #初期個体の評価
-    fitnesses = toolbox.map(toolbox.evaluate, pop) #[(6782,),(2342,)...]になってる
+    fitnesses = map(toolbox.evaluate, pop) #[(6782,),(2342,)...]になってる
     """
     >>> map((lambda x,y: x*y),[1,2,3,4],[2,3,4,5])
     [2, 6, 12, 20]
@@ -78,18 +76,13 @@ def main():
         #関数の引数が複数の場合は(データ、引数)で渡す
         logbook.record(fits, (pop, 1)) 
 
-        #評価値に従って個体を選択
-        offspring_generator = toolbox.select(pop, len(pop))
-        #offspring = toolbox.select(pop, len(pop))
-        #print len(offspring)
+        #評価値に従って個体を選択(残すエリートの割合)
+        #offspring = toolbox.select(pop, int(float(len(pop)) * elite))
+        print len(offspring)
+        raw_input()
         #Clone the selected individuals
-        offspring_clone = toolbox.map(toolbox.clone, offspring_generator)
-        offspring = [x for x in offspring_clone]
+        offspring = map(toolbox.clone, offspring)
 
-        #offspring2 = [toolbox.clone(ind) for ind in pop]
-        #print offspring
-        #print offspring2
-        #raw_input()
         #Apply crossover and mutation on the offspring
         # 偶数番目と奇数番目の個体を取り出して交差
         for child1, child2 in zip(offspring[::2], offspring[1::2]):
@@ -107,7 +100,7 @@ def main():
         #ここでinvalid_indにfloatが混じってる->mutateを変更で大丈夫になった
         #offspringの型がかわってるかも
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-        fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+        fitnesses = map(toolbox.evaluate, invalid_ind)
         
         #評価されていない個体を評価する.
         for ind, fit in zip(invalid_ind, fitnesses):
