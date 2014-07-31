@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import time
+import math
 import random
 import numpy as np
 
@@ -21,11 +23,16 @@ toolbox.register("individual", tools.initRepeat, creator.Individual,
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
 #Statistics
-stats = tools.Statistics(key=lambda ind: ind.fitness.values)
-stats.register("avg", np.mean, axis=0)
-stats.register("std", np.std, axis=0)
-stats.register("min", np.min, axis=0)
-stats.register("max", np.max, axis=0)
+stats_fit = tools.Statistics(key=lambda ind: ind.fitness.values)
+stats_size = tools.Statistics(key=len)
+mstats = tools.MultiStatistics(fitness = stats_fit, size = stats_size)
+mstats.register("avg", np.mean)
+mstats.register("std", np.std)
+mstats.register("min", np.min)
+mstats.register("max", np.max)
+
+#log setting
+logbook = tools.Logbook()
 
 
 #Evaluate function
@@ -51,38 +58,42 @@ def main():
     >>> map((lambda x,y: x*y),[1,2,3,4],[2,3,4,5])
     [2, 6, 12, 20]
     """
+    #record = mstats.compile(pop) そもそもここには書けない
+    #print record
+    #logbook.record(gen=0, **record)
     for ind, fit in zip(pop, fitnesses):
         ind.fitness.values = fit
 
-    #Select the next generation individuals
+        #Select the next generation individuals
     for g in xrange(NGEN):
         offspring = toolbox.select(pop, len(pop))
         #Clone the selected individuals
         offspring = map(toolbox.clone, offspring)
 
-    #Apply crossover and mutation on the offspring
-    for child1, child2 in zip(offspring[::2], offspring[1::2]):
-        if random.random() < CXPB:
-            toolbox.mate(child1, child2)
-            del child1.fitness.values
-            del child2.fitness.values
+        #Apply crossover and mutation on the offspring
+        for child1, child2 in zip(offspring[::2], offspring[1::2]):
+            if random.random() < CXPB:
+                toolbox.mate(child1, child2)
+                del child1.fitness.values
+                del child2.fitness.values
 
-    for mutant in offspring:
-        if random.random() < MUTPB:
-            toolbox.mutate(mutant)
-            del mutant.fitness.values
+        for mutant in offspring:
+            if random.random() < MUTPB:
+                toolbox.mutate(mutant)
+                del mutant.fitness.values
 
-    #Evaluate the individuals with an invalid fitness
-    invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-    fitnesses = map(toolbox.evaluate, invalid_ind)
+        #Evaluate the individuals with an invalid fitness
+        invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
+        fitnesses = map(toolbox.evaluate, invalid_ind)
 
-    for ind, fit in zip(invalid_ind, fitnesses):
-        ind.fitness.values = fit
+        for ind, fit in zip(invalid_ind, fitnesses):
+            ind.fitness.values = fit
 
-    #The population is entirely replaced by the offspring
-    pop[:] = offspring
+        #The population is entirely replaced by the offspring
+        pop[:] = offspring
 
     return pop
 
 if __name__ == "__main__":
-    main()
+    p=main()
+    print p

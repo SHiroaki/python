@@ -88,8 +88,8 @@ def schedulecost(sol):
     #レンタカー料金追加
     if latestarrival < earliestdep:
         totalprice += 50
-        
-    return totalprice + totalwait
+    #deapのためにタプルで返すように変更
+    return (float(totalprice + totalwait)),
 
 def randomoptimize(domain, costf):
 
@@ -143,6 +143,7 @@ def hillclimb(domain, costf):
             break
 
     return sol
+
 
 def geneticoptimize(domain, costf, popsize=50, step=1, 
                     mutprob=0.2, elite=0.2, maxiter=100):
@@ -201,4 +202,4 @@ def geneticoptimize(domain, costf, popsize=50, step=1,
 if __name__ == "__main__":
     domain = [(0,9)]*(len(people)*2)
     s = geneticoptimize(domain, schedulecost)
-    print printschedule(s)
+#    print printschedule(s)
