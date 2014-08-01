@@ -52,7 +52,6 @@ def main():
 
     pop = toolbox.population(n=100)
     CXPB, MUTPB, NGEN = 0.7, 0.2, 100
-    elite = 0.2
     
     #初期個体の評価
     fitnesses = map(toolbox.evaluate, pop) #[(6782,),(2342,)...]になってる
@@ -76,12 +75,7 @@ def main():
         #関数の引数が複数の場合は(データ、引数)で渡す
         logbook.record(fits, (pop, 1)) 
 
-        #評価値に従って個体を選択(残すエリートの割合)
-        #offspring = toolbox.select(pop, int(float(len(pop)) * elite))
-        print len(offspring)
-        raw_input()
-        #Clone the selected individuals
-        offspring = map(toolbox.clone, offspring)
+        offspring = [toolbox.clone(ind) for ind in pop]
 
         #Apply crossover and mutation on the offspring
         # 偶数番目と奇数番目の個体を取り出して交差
@@ -97,17 +91,16 @@ def main():
                 del mutant.fitness.values
 
         #Evaluate the individuals with an invalid fitness
-        #ここでinvalid_indにfloatが混じってる->mutateを変更で大丈夫になった
-        #offspringの型がかわってるかも
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
         fitnesses = map(toolbox.evaluate, invalid_ind)
         
         #評価されていない個体を評価する.
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
-
+        
+        #評価値に従って個体を選択
         #The population is entirely replaced by the offspring
-        pop[:] = offspring
+        pop = toolbox.select(pop + offspring, len(offspring))
 
     return logbook
 

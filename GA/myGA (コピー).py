@@ -3,14 +3,18 @@
 import time
 import math
 import random
-import multiprocessing
+
 import numpy as np
+
 import optimization as opt
+
 import matplotlib.pyplot as plt
+
 from StatisticsGA import LogBook
 from deap import base, creator
 from deap import tools
-#from scoop import futures
+
+from scoop import futures
 
 
 #Types
@@ -27,14 +31,14 @@ toolbox.register("attribute", random.randint, INT_MIN, INT_MAX) #0~9の間の整
 toolbox.register("individual", tools.initRepeat, creator.Individual,
                     toolbox.attribute, n=IND_SIZE)
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
-pool = multiprocessing.Pool()
-toolbox.register("map", pool.map)  #並列化.効あり
+toolbox.register("map", futures.map)  #並列化.効いてるのか？
 
 #log setting
 logbook_header = ["avg", "std", "min", "max", "bestind"]
 logbook_func = [np.mean, np.std, np.min, np.max, tools.selBest]
 data_segment = [0,0,0,0,1] #recordでわたすデータの何番目のリストを使うか指定 
 logbook = LogBook(logbook_header, logbook_func, data_segment)
+logbook.printheaders()
 
 #Evaluate function = opt.schedualcost
 
@@ -74,8 +78,18 @@ def main():
         #関数の引数が複数の場合は(データ、引数)で渡す
         logbook.record(fits, (pop, 1)) 
 
-        offspring = [toolbox.clone(ind) for ind in pop]
+        #評価値に従って個体を選択
+        offspring_generator = toolbox.select(pop, len(pop))
+        #offspring = toolbox.select(pop, len(pop))
+        #print len(offspring)
+        #Clone the selected individuals
+        offspring_clone = toolbox.map(toolbox.clone, offspring_generator)
+        offspring = [x for x in offspring_clone]
 
+        #offspring2 = [toolbox.clone(ind) for ind in pop]
+        #print offspring
+        #print offspring2
+        #raw_input()
         #Apply crossover and mutation on the offspring
         # 偶数番目と奇数番目の個体を取り出して交差
         for child1, child2 in zip(offspring[::2], offspring[1::2]):
@@ -90,16 +104,17 @@ def main():
                 del mutant.fitness.values
 
         #Evaluate the individuals with an invalid fitness
+        #ここでinvalid_indにfloatが混じってる->mutateを変更で大丈夫になった
+        #offspringの型がかわってるかも
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
         fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
         
         #評価されていない個体を評価する.
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
-        
-        #評価値に従って個体を選択
+
         #The population is entirely replaced by the offspring
-        pop = toolbox.select(pop + offspring, len(offspring))
+        pop[:] = offspring
 
     return logbook
 
