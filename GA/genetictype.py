@@ -1,0 +1,27 @@
+# -*- coding: utf-8 -*-
+
+import math
+import random
+import bitstring
+
+#初期化.0~1のどこがスタート地点であるかMAX,MINで、人為的に決める
+#IND_SIZE = 10     #10bitバイナリ(グレイコード)
+#INT_MIN = 1
+#INT_MAX = 150
+
+def make_indviduals(INT_MIN, INT_MAX):
+    """ランダムな整数を得る(グレイコードに変換はあとで)"""
+    """[bitstring.obj, bitstring.obj, ....]を返す. bitstring.obj.int
+    で整数を得る.有効数字３桁でとろう"""
+
+    random.seed() #乱数生成器を初期化
+    ivalue = random.randint(INT_MIN, INT_MAX)
+    binaryobj = bitstring.BitArray(int=ivalue, length=10) 
+    ind_binary = (int(x) for x in binaryobj.bin)
+    
+    return ind_binary
+        
+    
+if __name__ == "__main__":
+    i  = make_indviduals(200, 211)
+    print i

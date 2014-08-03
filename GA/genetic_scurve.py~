@@ -1,32 +1,33 @@
 # -*- coding: utf-8 -*-
 
+import os
 import time
 import math
 import random
 import multiprocessing
 import numpy as np
+import genetictype
 import optimization as opt
 import matplotlib.pyplot as plt
 from StatisticsGA import LogBook
 from deap import base, creator
 from deap import tools
-#from scoop import futures
-
 
 #Types
 #評価関数が最小の組み合わせを求めるからweights=-1
-creator.create("FitnessMin", base.Fitness, weights=(-1.0,)) # do not forget ","
+creator.create("FitnessMin", base.Fitness, weights=(1.0,)) # do not forget ","
 creator.create("Individual", list, fitness=creator.FitnessMin)
 
 #Initialization
-IND_SIZE = 12
+IND_SIZE = 1
 INT_MIN = 0
-INT_MAX = 9
+INT_MAX = 150
 toolbox = base.Toolbox()
-toolbox.register("attribute", random.randint, INT_MIN, INT_MAX) #0~9の間の整数
-toolbox.register("individual", tools.initRepeat, creator.Individual,
-                    toolbox.attribute, n=IND_SIZE)
+toolbox.register("attribute", genetictype.make_indviduals, INT_MIN, INT_MAX) #0~150の間の整数
+toolbox.register("individual",tools.initIterate, creator.Individual,
+                 toolbox.attribute) 
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+
 pool = multiprocessing.Pool()
 toolbox.register("map", pool.map)  #並列化.効あり
 
@@ -36,35 +37,31 @@ logbook_func = [np.mean, np.std, np.min, np.max, tools.selBest]
 data_segment = [0,0,0,0,1] #recordでわたすデータの何番目のリストを使うか指定 
 logbook = LogBook(logbook_header, logbook_func, data_segment)
 
-#Evaluate function = opt.schedualcost
+#Evaluate function
+def evaluate(g):
+    return sum(g),
 
 #Operators
 toolbox.register("mate", tools.cxTwoPoint)
 toolbox.register("mutate", tools.mutUniformInt, low=0, up=9, indpb=0.2)
 toolbox.register("select", tools.selTournament, tournsize=3)
-toolbox.register("evaluate", opt.schedulecost)  #評価関数も必ずタプルで返す。中身はfloatにする
+toolbox.register("evaluate", evaluate)  #評価関数も必ずタプルで返す。中身はfloatにする
 
 #Algorithms
 def main():
     """Complete generational algorithm
-    toolbox.mapを使うとジェネレータが帰ってくる"""
+    mapを使うとジェネレータが帰ってくる"""
 
     pop = toolbox.population(n=100)
-    #print pop
-    #raw_input()
     CXPB, MUTPB, NGEN = 0.7, 0.2, 100
-    
     #初期個体の評価
     fitnesses = toolbox.map(toolbox.evaluate, pop) #[(6782,),(2342,)...]になってる
-    """
-    >>> map((lambda x,y: x*y),[1,2,3,4],[2,3,4,5])
-    [2, 6, 12, 20]
-    """
-
+    
     for ind, fit in zip(pop, fitnesses): #ここでfitnessesが遅延評価される
         print type(ind), ind
         ind.fitness.values = fit
-
+        
+    
     #Select the next generation individuals
     for g in xrange(NGEN):
         
@@ -72,13 +69,12 @@ def main():
         logbook.add_dictionary(g)
         #すべての個体の適応度をリストにまとめる
         fits = [ind.fitness.values for ind in pop]
-
+        
         # recordに渡す値は実行する関数と対応
         #関数の引数が複数の場合は(データ、引数)で渡す
         logbook.record(fits, (pop, 1)) 
-
         offspring = [toolbox.clone(ind) for ind in pop]
-
+        #print offspring
         #Apply crossover and mutation on the offspring
         # 偶数番目と奇数番目の個体を取り出して交差
         for child1, child2 in zip(offspring[::2], offspring[1::2]):

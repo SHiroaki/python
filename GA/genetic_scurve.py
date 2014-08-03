@@ -1,32 +1,34 @@
 # -*- coding: utf-8 -*-
 
+import os
 import time
 import math
 import random
 import multiprocessing
+import genetic_methods
+import bitstring
 import numpy as np
-import optimization as opt
 import matplotlib.pyplot as plt
 from StatisticsGA import LogBook
 from deap import base, creator
 from deap import tools
-#from scoop import futures
-
 
 #Types
 #評価関数が最小の組み合わせを求めるからweights=-1
-creator.create("FitnessMin", base.Fitness, weights=(-1.0,)) # do not forget ","
+creator.create("FitnessMin", base.Fitness, weights=(1.0,)) # do not forget ","
 creator.create("Individual", list, fitness=creator.FitnessMin)
 
 #Initialization
-IND_SIZE = 12
-INT_MIN = 0
-INT_MAX = 9
+IND_SIZE = 1
+INT_MIN = 900
+INT_MAX = 1000
 toolbox = base.Toolbox()
-toolbox.register("attribute", random.randint, INT_MIN, INT_MAX) #0~9の間の整数
-toolbox.register("individual", tools.initRepeat, creator.Individual,
-                    toolbox.attribute, n=IND_SIZE)
+toolbox.register("attribute", genetic_methods.make_indviduals, 
+                 INT_MIN, INT_MAX) #0~150の間の整数
+toolbox.register("individual",tools.initIterate, creator.Individual,
+                 toolbox.attribute) 
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+
 pool = multiprocessing.Pool()
 toolbox.register("map", pool.map)  #並列化.効あり
 
@@ -36,33 +38,26 @@ logbook_func = [np.mean, np.std, np.min, np.max, tools.selBest]
 data_segment = [0,0,0,0,1] #recordでわたすデータの何番目のリストを使うか指定 
 logbook = LogBook(logbook_header, logbook_func, data_segment)
 
-#Evaluate function = opt.schedualcost
+#Evaluate function
 
 #Operators
 toolbox.register("mate", tools.cxTwoPoint)
-toolbox.register("mutate", tools.mutUniformInt, low=0, up=9, indpb=0.2)
+toolbox.register("mutate", tools.mutFlipBit, indpb=0.05) #10bit中1bitが変化する
 toolbox.register("select", tools.selTournament, tournsize=3)
-toolbox.register("evaluate", opt.schedulecost)  #評価関数も必ずタプルで返す。中身はfloatにする
+#評価関数も必ずタプルで返す。中身はfloatにする
+toolbox.register("evaluate", genetic_methods.evaluate)  
 
 #Algorithms
 def main():
     """Complete generational algorithm
-    toolbox.mapを使うとジェネレータが帰ってくる"""
+    mapを使うとジェネレータが帰ってくる"""
 
     pop = toolbox.population(n=100)
-    #print pop
-    #raw_input()
-    CXPB, MUTPB, NGEN = 0.7, 0.2, 100
-    
+    CXPB, MUTPB, NGEN = 0.6, 0.3, 100
     #初期個体の評価
     fitnesses = toolbox.map(toolbox.evaluate, pop) #[(6782,),(2342,)...]になってる
-    """
-    >>> map((lambda x,y: x*y),[1,2,3,4],[2,3,4,5])
-    [2, 6, 12, 20]
-    """
-
+    
     for ind, fit in zip(pop, fitnesses): #ここでfitnessesが遅延評価される
-        print type(ind), ind
         ind.fitness.values = fit
 
     #Select the next generation individuals
@@ -72,13 +67,12 @@ def main():
         logbook.add_dictionary(g)
         #すべての個体の適応度をリストにまとめる
         fits = [ind.fitness.values for ind in pop]
-
+        
         # recordに渡す値は実行する関数と対応
         #関数の引数が複数の場合は(データ、引数)で渡す
         logbook.record(fits, (pop, 1)) 
-
         offspring = [toolbox.clone(ind) for ind in pop]
-
+        #print offspring
         #Apply crossover and mutation on the offspring
         # 偶数番目と奇数番目の個体を取り出して交差
         for child1, child2 in zip(offspring[::2], offspring[1::2]):
@@ -113,16 +107,28 @@ if __name__ == "__main__":
     gen = logdata.select("gen")
     fit_mins = logdata.select("min")
     fit_avgs = logdata.select("avg")
+    best_ind = logdata.select("bestind")
+    v = []
+    for x in best_ind:
+        bit = "0b" + "".join(toolbox.map(str, x[0]))
+        bito = bitstring.BitArray(bit)
+        v.append( bito.uint)
+    
 
     fig, ax1 = plt.subplots()
-    line1 = ax1.plot(gen, fit_mins, "b-", label="Minmum Fitness")
+    line1 = ax1.plot(gen, v, "b-", label="Best Individual")
     ax1.set_xlabel("Generation")
-    ax1.set_ylabel("Fitness", color="b")
+    ax1.set_ylabel("Best Individual", color="b")
 
     for tl in ax1.get_yticklabels():
         tl.set_color("b")
 
-        line2 = ax1.plot(gen, fit_avgs, "r-", label="Average Fitness")
+    ax2 = ax1.twinx()
+    line2 = ax2.plot(gen, fit_avgs, "r-", label="Average Fitness")
+    ax2.set_ylabel("Average Fitness", color="r")
+
+    for tl in ax2.get_yticklabels():
+        tl.set_color("r")
 
     lns = line1 + line2
     labs = [l.get_label() for l in lns]
