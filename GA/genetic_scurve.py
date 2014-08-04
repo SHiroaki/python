@@ -21,7 +21,7 @@ creator.create("Individual", list, fitness=creator.FitnessMin)
 #Initialization
 IND_SIZE = 1
 INT_MIN = 0
-INT_MAX = 250
+INT_MAX = 100
 toolbox = base.Toolbox()
 toolbox.register("attribute", genetic_methods.make_indviduals, 
                  INT_MIN, INT_MAX) #0~150の間の整数
@@ -51,7 +51,7 @@ toolbox.register("evaluate", genetic_methods.evaluate)
 def main():
     """Complete generational algorithm
     mapを使うとジェネレータが帰ってくる"""
-    n=100
+    n=10
     pop = toolbox.population(n)
     #交叉も突然変異もしてないのに個体が変わる
     #ベストも変わる
@@ -71,7 +71,7 @@ def main():
         logbook.add_dictionary(g)
         #すべての個体の適応度をリストにまとめる
         fits = [ind.fitness.values for ind in pop]
-        """b2 = tools.selBest(sorted(pop), 1)
+        b2 = tools.selBest(sorted(pop), 1)
         bi = "0b"+"".join(toolbox.map(str, b2[0]))
         b = bitstring.BitArray(bi)
         print "individuals"
@@ -79,7 +79,7 @@ def main():
             bit = "0b" + "".join(toolbox.map(str, x))
             bito = bitstring.BitArray(bit)
             print bito.uint, x.fitness.values[0],toolbox.evaluate(bit),
-        print ":: best", b.uint, toolbox.evaluate(b2[0])"""
+        print ":: best", b.uint, toolbox.evaluate(b2[0])
         #fits_tup = [(ind, ind.fitness.values) for ind in pop]
         # recordに渡す値は実行する関数と対応
         #関数の引数が複数の場合は(データ、引数)で渡す
