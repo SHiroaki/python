@@ -20,8 +20,8 @@ creator.create("Individual", list, fitness=creator.FitnessMin)
 
 #Initialization
 IND_SIZE = 1
-INT_MIN = 900
-INT_MAX = 1000
+INT_MIN = 200
+INT_MAX = 250
 toolbox = base.Toolbox()
 toolbox.register("attribute", genetic_methods.make_indviduals, 
                  INT_MIN, INT_MAX) #0~150の間の整数
@@ -53,7 +53,7 @@ def main():
     mapを使うとジェネレータが帰ってくる"""
 
     pop = toolbox.population(n=100)
-    CXPB, MUTPB, NGEN = 0.6, 0.3, 100
+    CXPB, MUTPB, NGEN = 0.6, 0.2, 100
     #初期個体の評価
     fitnesses = toolbox.map(toolbox.evaluate, pop) #[(6782,),(2342,)...]になってる
     
@@ -71,8 +71,13 @@ def main():
         # recordに渡す値は実行する関数と対応
         #関数の引数が複数の場合は(データ、引数)で渡す
         logbook.record(fits, (pop, 1)) 
-        offspring = [toolbox.clone(ind) for ind in pop]
-        #print offspring
+        offspring = toolbox.select(pop, len(pop))
+        #元のバージョンoffspring = [toolbox.clone(ind) for ind in pop]やめたほうがいい
+        #averageがおかしくなる
+        
+        offspring = list(toolbox.map(toolbox.clone, offspring))
+        #print offspring == offspring1 常にtrue
+        
         #Apply crossover and mutation on the offspring
         # 偶数番目と奇数番目の個体を取り出して交差
         for child1, child2 in zip(offspring[::2], offspring[1::2]):
@@ -96,7 +101,8 @@ def main():
         
         #評価値に従って個体を選択
         #The population is entirely replaced by the offspring
-        pop = toolbox.select(pop + offspring, len(offspring))
+        #pop = toolbox.select(pop + offspring, len(offspring))
+        pop[:] = offspring
 
     return logbook
 
@@ -107,7 +113,9 @@ if __name__ == "__main__":
     gen = logdata.select("gen")
     fit_mins = logdata.select("min")
     fit_avgs = logdata.select("avg")
+    fit_max = logdata.select("max")
     best_ind = logdata.select("bestind")
+
     v = []
     for x in best_ind:
         bit = "0b" + "".join(toolbox.map(str, x[0]))
