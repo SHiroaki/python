@@ -22,8 +22,14 @@ creator.create("Individual", list, fitness=creator.FitnessMin)
 
 #Initialization
 IND_SIZE = 1
-INT_MIN = 800
-INT_MAX = 800
+INT_MIN = 200
+INT_MAX = 200
+
+repeatnum = 1 #GAの繰り返し数
+#突然変異を起こす世代を指定
+mutate_quick_gen = (50,)
+mutate_slow_gen = (xrange(20, 70))
+
 toolbox = base.Toolbox()
 toolbox.register("attribute", genetic_methods.make_indviduals, 
                  INT_MIN, INT_MAX) 
@@ -54,10 +60,7 @@ toolbox.register("select", tools.selTournament, tournsize=2)
 toolbox.register("evaluate", genetic_methods.evaluate)  
 
 #Algorithms
-#任意の世代で突然変異が起こせるように変更
-repeatnum = 10
-mutate_quick_gen = (50,)
-mutate_slow_gen = (xrange(20, 70))
+
 def main():
     """Complete generational algorithm
     mapを使うとジェネレータが帰ってくる"""
@@ -149,16 +152,21 @@ def main():
         pop[:] = offspring
 
     return logbook
-    
 
-if __name__ == "__main__":
-    #mainを何回か繰り返した時の平均をプロットする
-    #cProfile.run('main()') プロファイラ使用時
+def repeatGA():
 
     repeat = xrange(repeatnum)
     logs = [main() for x in repeat]
-    plotparam = genetic_methods.get_plot_parametor(logs)
+    plotparametor = genetic_methods.get_plot_parametor(logs)   
+
+    return plotparametor
+
+if __name__ == "__main__":
+    #mainを何回か繰り返した時の平均をプロットする
     
+    #cProfile.run('repeatGA()') #プロファイラ使用時
+    plotparam = repeatGA()
+
     gen = plotparam["gen"]
     v = plotparam["bestind"]
     fit_avgs = plotparam["avg"] #適応度の平均

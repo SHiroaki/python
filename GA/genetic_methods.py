@@ -160,7 +160,7 @@ if __name__ == "__main__":
     myu = 500
 
     #exit()
-    f = open("res.txt","w")
+    #f = open("res.txt","w")
     for x in np.arange(0., 1000., 1):
         xlist.append(x)
         binaryobj = bitstring.BitArray(uint=x, length=10)
