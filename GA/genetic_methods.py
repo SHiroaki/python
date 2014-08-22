@@ -5,6 +5,7 @@ import random
 import numpy as np
 import bitstring
 from matplotlib import pyplot as plt
+from scipy.interpolate import UnivariateSpline
 
 def g_to_p(binary_string):
     """gtype -> ptype"""
@@ -117,6 +118,12 @@ def mutate_smallvib(individual):
         individual[i] = swaped_binary[i]
     
     return individual,
+
+def spline_interpolate(x, y):
+    """x座標のリスト, y座標のリストを受け取りスプライン補間した関数を返す
+    """
+    splinefunc = UnivariateSpline(x, y)
+    return splinefunc
 
 def get_plot_parametor(logdata_list):
     """全繰り返しを通した平均を出す

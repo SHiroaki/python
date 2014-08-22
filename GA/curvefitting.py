@@ -22,12 +22,20 @@ def func():
              1000.0 * ((1.0/np.sqrt(2*np.pi*sigma)) *
                        np.exp(-(i - myu)**2.0/2.0/sigma)))
         return v
+
+    def quadratic_function(i):
+        return i **2
         
-    xdata = np.linspace(0,1000,randomvalues)
-    ydata = normal_dis(xdata)
-    s = UnivariateSpline(xdata, ydata,s=1) #スプライン補間 sの値を指定すること
-    xs = np.linspace(0, 1000, 1000)
-    ys = s(xs)    
+    #xdata = np.linspace(0,1000,randomvalues)
+    xdata = np.linspace(-100, 100, randomvalues)
+    #ydata = normal_dis(xdata)
+    ydata = quadratic_function(xdata)
+    #スプライン補間 sの値を指定すること
+    splinefunc = UnivariateSpline(xdata, ydata, s=1)
+    print splinefunc.derivatives(0)
+    #xs = np.linspace(0, 1000, 1000)
+    xs = np.linspace(-100, 100, 1000)
+    ys = splinefunc(xs)    
 
     return xdata, ydata, xs, ys
 

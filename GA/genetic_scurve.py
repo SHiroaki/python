@@ -173,7 +173,10 @@ if __name__ == "__main__":
     ptype_avgs = plotparam["avgind"]
     pop_median = plotparam["median"]
   
-
+    """spfunc = genetic_methods.spline_interpolate(gen, v)
+    xs = np.linspace(0, len(gen), len(gen)*100)
+    spfunc_ags = spfunc(xs)
+    print spfunc_ags"""
     fig, ax1 = plt.subplots()
     ax1.set_xlabel("Generation")
     ax1.set_ylabel("PTYPE VALUE")
@@ -185,7 +188,9 @@ if __name__ == "__main__":
     ax2.set_ylabel("Average Fitness", color="r")
 
     line1 = ax1.plot(gen, v, "b-", label="Best Individual")
+    #line1 = ax1.plot(xs, spfunc_ags, "b-", label="Best Individual")
     line2 = ax1.plot(gen, ptype_avgs,"g-", label="PTYPE Mean")
+    #line2 = ax1.plot(xs, spfunc_ags,"g-", label="PTYPE Mean")
     line3 = ax2.plot(gen, fit_avgs, "r-", label="Average Fitness")
     line4 = ax1.plot(gen, pop_median, "black", label="Median")
 
