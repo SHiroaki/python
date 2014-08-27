@@ -6,6 +6,9 @@ import numpy as np
 import bitstring
 from matplotlib import pyplot as plt
 from scipy.interpolate import UnivariateSpline
+import scipy.misc as scmisc
+
+random.seed(5) #seedを動かさなければ基本的に同じ乱数が生成されるはず.....
 
 def g_to_p(binary_string):
     """gtype -> ptype"""
@@ -21,7 +24,7 @@ def make_indviduals(INT_MIN, INT_MAX):
     """[bitstring.obj, bitstring.obj, ....]を返す. bitstring.obj.int
     で整数を得る.有効数字３桁でとろう"""
 
-    random.seed() #乱数生成器を初期化
+    #random.seed() #乱数生成器を初期化
     ivalue = random.randint(INT_MIN, INT_MAX)
     binaryobj = bitstring.BitArray(uint=ivalue, length=10)  #ここも符号なしで
     graycode = binaryobj ^ (binaryobj >> 1) #grayコードに変換
@@ -43,24 +46,41 @@ def gray_to_binary(gray_string):
     #print binary_list ok
     return binary_list
 
-
-
-def evaluate(ind):
-    """評価関数
-    bit(graycode)のlist -> 評価値計算 -> (float)評価値返却
-    1000を超えると最悪の評価値をつける"""
+def calc_curvature(func, d_point=0):
+    #曲率半径、曲率を求める
+    #曲率が大きいほど関数の曲がり具合が大きい
     
+    dx1 = scmisc.derivative(func, d_point, n=1, dx=1e-6) #dxを指定しないとダメ
+    dx2 = scmisc.derivative(func, d_point, n=2, dx=1e-6)
+    R = (1.0 + (dx1**2.0))**(3.0/2.0) / np.fabs(dx2) #曲率半径
+    curvature_of_func = 1.0 / R
+
+    return curvature_of_func
+
+# multi pool用のラッパー
+def wrapper_evaluate(args):
+    #並列処理時に複数の引数を渡す
+    return evaluate(*args)
+
+def evaluate(ind, curvatures):
+    """評価関数
+    bit(graycode)のlist & n世代分の曲率 -> 評価値計算 -> (float)評価値返却
+    """
+
     sigma = 25000.0
     myu = 500.0
-    
     uint_value = g_to_p(gray_to_binary(ind))
-    
+
+    y = (((uint_value/100.0) - 5.0)**2.0) #ベースの2次関数
+
+    average_curvature = np.mean(curvatures)
+    #print average_curvature
     #正規分布の確率密度関数に代入
     #型を揃えてから数式は計算しよう
     normal_dist_bias = ((1.0/np.sqrt(2*np.pi*sigma)) * 
                         np.exp(-(float(uint_value) - myu)**2.0/2.0/sigma))
 
-    #print uint_value, 100*normal_dist_bias
+    print y * (100*normal_dist_bias)
     return (100*normal_dist_bias,)
 
 def mutate_bigvib(individual):
@@ -122,7 +142,7 @@ def mutate_smallvib(individual):
 def spline_interpolate(x, y):
     """x座標のリスト, y座標のリストを受け取りスプライン補間した関数を返す
     """
-    splinefunc = UnivariateSpline(x, y)
+    splinefunc = UnivariateSpline(x, y, s=1)
     return splinefunc
 
 def get_plot_parametor(logdata_list):
