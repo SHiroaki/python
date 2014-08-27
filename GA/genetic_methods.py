@@ -57,12 +57,18 @@ def calc_curvature(func, d_point=0):
 
     return curvature_of_func
 
+def get_slope(func, points):
+    #splinefuncの5つの点の中心での微分係数を返す.
+    d_point = np.mean(points)
+    slope = scmisc.derivative(func, d_point, n=1, dx=1e-6)
+    return slope
+
 # multi pool用のラッパー
 def wrapper_evaluate(args):
     #並列処理時に複数の引数を渡す
     return evaluate(*args)
 
-def evaluate(ind, curvatures):
+def evaluate(ind, curvatures, slope):
     """評価関数
     bit(graycode)のlist & n世代分の曲率 -> 評価値計算 -> (float)評価値返却
     """
@@ -70,17 +76,29 @@ def evaluate(ind, curvatures):
     sigma = 25000.0
     myu = 500.0
     uint_value = g_to_p(gray_to_binary(ind))
+    
+    average_curvature = np.mean(curvatures)
+    curvature_bias = np.exp(np.mean(curvatures)) #e**curvatureの平均
+
+    if slope < 0:
+        #print "減る方向にバイアス"
+        pass
+    else:
+        pass
+        #print "増える方向にバイアス"
 
     y = (((uint_value/100.0) - 5.0)**2.0) #ベースの2次関数
-
-    average_curvature = np.mean(curvatures)
-    #print average_curvature
+    
+    #print curvatures
     #正規分布の確率密度関数に代入
     #型を揃えてから数式は計算しよう
     normal_dist_bias = ((1.0/np.sqrt(2*np.pi*sigma)) * 
                         np.exp(-(float(uint_value) - myu)**2.0/2.0/sigma))
 
-    print y * (100*normal_dist_bias)
+    #y = (0.01*uint_value) + 100.0*normal_dist_bias #ただの直線
+    #return ((y * 100*normal_dist_bias),)
+    #print average_curvature
+    return (y,)
     return (100*normal_dist_bias,)
 
 def mutate_bigvib(individual):
@@ -97,7 +115,7 @@ def mutate_bigvib(individual):
     tmp = pvalue
     pvalue = pvalue + plusvalue 
 
-    if pvalue < 0 or pvalue > 1024:
+    if pvalue < 0 or pvalue > 1000:
         pvalue = tmp
 
     binaryobj = bitstring.BitArray(uint=pvalue, length=10)  #符号なしで    
@@ -126,7 +144,7 @@ def mutate_smallvib(individual):
 
     pvalue = pvalue + plusvalue 
     
-    if pvalue < 0 or pvalue > 1024:
+    if pvalue < 0 or pvalue > 1000:
         pvalue = tmp
 
     binaryobj = bitstring.BitArray(uint=pvalue, length=10)  #符号なしで    

@@ -23,11 +23,11 @@ creator.create("Individual", list, fitness=creator.FitnessMax)
 #Initialization
 IND_SIZE = 1
 INT_MIN = 200
-INT_MAX = 200
+INT_MAX = 500
 
 repeatnum = 1 #GAの繰り返し数
 #突然変異を起こす世代を指定
-mutate_quick_gen = (50,)
+mutate_quick_gen = (-50,)
 mutate_slow_gen = (xrange(20, 70))
 
 toolbox = base.Toolbox()
@@ -42,7 +42,7 @@ toolbox.register("map", pool.map)  #並列化.効あり
 
 #log setting
 logbook_header = ["avg","bestind", "avgind", "median", "curvature"]
-logbook_func = [np.mean, tools.selBest, np.mean, np.median, np.median]
+logbook_func = [np.mean, tools.selBest, np.mean, np.median, np.mean]
 data_segment = [0, 1, 2, 2, 3] #recordでわたすデータの何番目のリストを使うか指定
 logbook = LogBook(logbook_header, logbook_func, data_segment)
 
@@ -64,7 +64,7 @@ def main():
     """Complete generational algorithm
     mapを使うとジェネレータが帰ってくる"""
 
-    n=500
+    n=250
     pop = toolbox.population(n)
     #交叉も突然変異もしてないのに個体が変わる
     #ベストも変わる
@@ -72,7 +72,7 @@ def main():
     #結構突然変異起こる. 起こらないと値は揺れない
 
     #初期個体の評価
-    pop_for_evaluate = [(x, 0) for x in pop]
+    pop_for_evaluate = [(x, 0, 0) for x in pop]
     fitnesses = toolbox.map(toolbox.evaluate, pop_for_evaluate) #[(6782,),(2342,)...]になってる
     
     for ind, fit in zip(pop, fitnesses): #ここでfitnessesが遅延評価される
@@ -84,7 +84,6 @@ def main():
         random.seed()
 
         #評価のために保存される値のリスト(曲率を求めるのに使う)
-        spline_ypoints = []
         past = 5 #何世代前まで見るか
         if g-past-1 >= 0:
             save_point_start  = g - past - 1
@@ -103,9 +102,9 @@ def main():
         pop_binary = [genetic_methods.gray_to_binary(x) for x in pop]
         pop_ptype = [genetic_methods.g_to_p(x) for x in pop_binary]
 
-        #if g in print_pop:
-            #print pop_ptype
-        """av = np.mean(pop_ptype)
+        """if g in print_pop:
+            print pop_ptype
+        av = np.mean(pop_ptype)
         b = tools.selBest(pop, 1)
         b = genetic_methods.gray_to_binary(b[0])
         b = genetic_methods.g_to_p(b)
@@ -116,7 +115,7 @@ def main():
             #pass
 
         #補間する値を取り出す
-        spline_ypoints = logbook.select("avg")[save_point_start:
+        spline_ypoints = logbook.select("avgind")[save_point_start:
                                                         save_point_end]
         spline_xpoints = np.arange(save_point_start,
                                   save_point_end, 1.0)
@@ -127,12 +126,17 @@ def main():
         else:
             splinedfunc = lambda x:0
 
+        slope = genetic_methods.get_slope(splinedfunc, spline_xpoints)
+        
         #print spline_ypoints, splinedfunc(spline_xpoints)
-        curvatures = [1000.0*genetic_methods.calc_curvature(
+        curvatures = [genetic_methods.calc_curvature(
                 splinedfunc, x) for x in spline_xpoints]
-        #curvatures = [int(x) for x in curvatures]
-        #curvatures = np.around(curvatures, decimals=0)
-        #print g, curvatures
+        
+        curvatures = np.around(np.power(curvatures, 2), decimals=2)
+        curvature_bias_e = np.exp(np.mean(curvatures))
+        #curvature_bias_10 = np.power(10, np.mean(curvatures))
+        #print g, curvature_bias_e
+        
 
         # recordに渡す値は実行する関数と対応.適応度以外はすべてタプルで
         #関数の引数が複数の場合は(データ、引数)で渡す.
@@ -168,7 +172,8 @@ def main():
 
         #Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-        invalid_ind_for_evaluate = [(x, curvatures) for x in invalid_ind]
+        invalid_ind_for_evaluate = [(x, curvatures, 
+                                     slope) for x in invalid_ind]
         fitnesses = toolbox.map(toolbox.evaluate, invalid_ind_for_evaluate)
 
         #評価されていない個体を評価する.
@@ -177,6 +182,7 @@ def main():
 
         #評価値に従って個体を選択
         #The population is entirely replaced by the offspring
+        
         pop[:] = offspring
 
     return logbook
@@ -221,14 +227,15 @@ if __name__ == "__main__":
     #line1 = ax1.plot(xs, spfunc_ags, "b-", label="Best Individual")
     line2 = ax1.plot(gen, ptype_avgs,"g-", label="PTYPE Mean")
     #line2 = ax1.plot(xs, spfunc_ags,"g-", label="PTYPE Mean")
-    line3 = ax2.plot(gen, fit_avgs, "r-", label="Average Fitness")
-    #line3 = ax2.plot(gen, curva, "r-", label="Curvature")
+    #line3 = ax2.plot(gen, fit_avgs, "r-", label="Average Fitness")
+    line3 = ax2.plot(gen, curva, "r-", label="Curvature")
     line4 = ax1.plot(gen, pop_median, "black", label="Median")
+    
 
     for tl in ax2.get_yticklabels():
         tl.set_color("r")
 
-    lns = line1 + line2 + line3 + line4
+    lns = line2 + line3 + line4 + line1
     labs = [l.get_label() for l in lns]
     ax1.legend(lns, labs, loc="lower right")
     plt.show()

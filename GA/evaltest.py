@@ -14,7 +14,7 @@ def evaluate(ind):
     myu = 500.0
     uint_value = g_to_p(gray_to_binary(ind))
     #print uint_value
-    y = (((uint_value/100.0) - 5.0)**2.0) #ベースの2次関数
+    y = (((uint_value/100.0) - 5.0)**2.0)  #ベースの2次関数
     
     #average_curvature = np.mean(curvatures)
     #print average_curvature
@@ -23,13 +23,18 @@ def evaluate(ind):
     normal_dist_bias = ((1.0/np.sqrt(2*np.pi*sigma)) * 
                         np.exp(-(float(uint_value) - myu)**2.0/2.0/sigma))
 
-    evale = 1.0 / (y ** (100*normal_dist_bias))
+    #evale = 1.0 / (y ** (100*normal_dist_bias))
 
-    if uint_value == 500:
-        print y, 100*normal_dist_bias
-    #
-    return (100*normal_dist_bias,)
-    #return (evale,)
+    #y = 0.01*uint_value * 100.0*normal_dist_bias #ただの直線 このままだと正規分布のバイアスは聞かない
+
+    if uint_value < 500:
+        y = y + normal_dist_bias*100
+    else:
+        y = normal_dist_bias
+        #print y, 100*normal_dist_bias
+    
+    #return (100*normal_dist_bias,)
+    return (y,)
     
 if __name__ == "__main__":
     xlist = []

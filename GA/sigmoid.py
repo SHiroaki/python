@@ -40,9 +40,10 @@ def f1(x):
     return k*(x**2)
 
 def testf(x):
-
-    #return 2.*(x**3.) - x + 3. 
-    return (x - 5.0)**2
+     
+     print np.exp(x)
+     return np.exp(x)
+    #return (x - 5.0)**2
 
 def calc_curvature(func, d_point=0):
     #曲率半径、曲率を求める
@@ -58,13 +59,13 @@ def calc_curvature(func, d_point=0):
 if __name__ == "__main__":
     
     #r, cur = calc_curvature(testf, )
-    xdata = np.linspace(-5., 15., 100)
+    xdata = np.linspace(0., 1.5, 150)
     curvatures = [ calc_curvature(testf, 
                                   x) for x in xdata]
 
     ydata = testf(xdata)
      
-    x_somepoint =  np.linspace(-1., 0, 100)
+    x_somepoint =  np.linspace(0., 3, 100)
     y_somepoit = [testf(x) for x in x_somepoint]
     spfunc = spl(x_somepoint, y_somepoit, s=1)
 
@@ -77,17 +78,17 @@ if __name__ == "__main__":
     for tl in ax1.get_yticklabels():
          tl.set_color("black")
          
-    ax2 = ax1.twinx()
-    ax2.set_ylabel("Curvature", color="r")
+    #ax2 = ax1.twinx()
+    #ax2.set_ylabel("Curvature", color="r")
 
     line1 = ax1.plot(xdata, ydata, "b-", label="Function Values")
-    line2 = ax1.plot(x_somepoint, spfunc(x_somepoint), "g-", label="Spline Value")
-    line3 = ax2.plot(xdata, curvatures, "r-", label="Curvature")
-    line4 = ax2.plot(x_somepoint, curvatures_spl, "black", label="Spline curvature")
+    #line2 = ax1.plot(x_somepoint, spfunc(x_somepoint), "g-", label="Spline Value")
+    #line3 = ax2.plot(xdata, curvatures, "r-", label="Curvature")
+    #line4 = ax2.plot(x_somepoint, curvatures_spl, "black", label="Spline curvature")
 
-    for tl in ax2.get_yticklabels():
-         tl.set_color("r")
-    lns = line1 + line2 + line3 + line4
+    #for tl in ax2.get_yticklabels():
+         #tl.set_color("r")
+    lns = line1 #+ line2 + line3 + line4
     labs = [l.get_label() for l in lns]
     ax1.legend(lns, labs, loc="lower right")
     plt.show()
