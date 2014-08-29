@@ -58,48 +58,42 @@ def calc_curvature(func, d_point=0):
     return curvature_of_func
 
 def get_slope(func, points):
-    #splinefuncの5つの点の中心での微分係数を返す.
+    #渡された曲線の微分
     d_point = np.mean(points)
+    print d_point
     slope = scmisc.derivative(func, d_point, n=1, dx=1e-6)
     return slope
+
+def get_slopes_change(x_points, slopes):
+    #傾きの変化の平均を求める
+    for i, x in enumerate(x_points):
+        print i ,x, slopes[i]
+
 
 # multi pool用のラッパー
 def wrapper_evaluate(args):
     #並列処理時に複数の引数を渡す
     return evaluate(*args)
 
-def evaluate(ind, curvatures, slope):
-    """評価関数
+def evaluate(ind, slope):
+    """評価関数 (設定上は不規則動詞の使いやすさ度)
     bit(graycode)のlist & n世代分の曲率 -> 評価値計算 -> (float)評価値返却
     """
+    #myus = np.linspace(0, 1000, 100)
+    sigma = 30000.0
+    myu = 1000.0
 
-    sigma = 25000.0
-    myu = 500.0
     uint_value = g_to_p(gray_to_binary(ind))
     
-    average_curvature = np.mean(curvatures)
-    curvature_bias = np.exp(np.mean(curvatures)) #e**curvatureの平均
+    y = (((uint_value/100.0) - 5.0)**2.0) / 100.0 #ベースの2次関数
 
-    if slope < 0:
-        #print "減る方向にバイアス"
-        pass
-    else:
-        pass
-        #print "増える方向にバイアス"
-
-    y = (((uint_value/100.0) - 5.0)**2.0) #ベースの2次関数
-    
-    #print curvatures
     #正規分布の確率密度関数に代入
     #型を揃えてから数式は計算しよう
     normal_dist_bias = ((1.0/np.sqrt(2*np.pi*sigma)) * 
                         np.exp(-(float(uint_value) - myu)**2.0/2.0/sigma))
+    #return (y,)
+    return (1000*normal_dist_bias,)
 
-    #y = (0.01*uint_value) + 100.0*normal_dist_bias #ただの直線
-    #return ((y * 100*normal_dist_bias),)
-    #print average_curvature
-    return (y,)
-    return (100*normal_dist_bias,)
 
 def mutate_bigvib(individual):
     """固体のPTYPEを急激に上昇させる
@@ -143,6 +137,47 @@ def mutate_smallvib(individual):
     plusvalue = random.randint(PLUS_MIN, PLUS_MAX) #任意の値分増加させる
 
     pvalue = pvalue + plusvalue 
+    
+    if pvalue < 0 or pvalue > 1000:
+        pvalue = tmp
+
+    binaryobj = bitstring.BitArray(uint=pvalue, length=10)  #符号なしで    
+    graycode = binaryobj ^ (binaryobj >> 1) #grayコードに変換
+    swaped_binary = [int(x) for x in graycode.bin]
+    
+    #増加させたbit列に交換する
+    for i in xrange(len(individual)):
+        individual[i] = swaped_binary[i]
+    
+    return individual,
+
+def get_base_bias():
+    sigma = 40000.0
+    myu = 500.0
+    base_bias = []
+    for x in np.arange(0, 1000, 1):
+        n = ((1.0/np.sqrt(2*np.pi*sigma)) * 
+             np.exp(-(float(x) - myu)**2.0/2.0/sigma))
+        base_bias.append(np.around(10000*n, decimals=0))
+    
+
+    mutate_bias_power = xrange(0,1000, 50) #バイアス値の区切り
+    mutate_bias_gen = (xrange(50, 50+len(mutate_bias_power)))
+    real_bias = [base_bias[x] for x in mutate_bias_power]
+    
+    return mutate_bias_gen, real_bias
+
+
+def mutate_bias(individual, bias, power):
+    """2次関数の幅を超えれるような突然変異(テスト版)
+    減るか増えるかは傾きの富豪で判断
+    強制的に変化する方向に値を持っていく
+    """
+    binary_notgray = gray_to_binary(individual)
+    pvalue = g_to_p(binary_notgray)
+    tmp = pvalue
+
+    pvalue = pvalue + bias * power 
     
     if pvalue < 0 or pvalue > 1000:
         pvalue = tmp
