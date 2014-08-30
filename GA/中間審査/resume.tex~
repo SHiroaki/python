@@ -1,0 +1,128 @@
+\documentclass[10.5pt, a4j, twocolumn]{jsarticle}
+
+
+\usepackage[dvipdfm,margin=1.5cm]{geometry}% 余白の調整 上下左右 = 2 cm
+\usepackage[dvipdfmx]{graphicx, color}% 画像の読み込み
+\usepackage{type1cm}% おまじない
+\usepackage{url}% URL の記述のため
+\usepackage{fancybox,ascmac}
+\usepackage{fancyhdr} %ヘッダーを入れるため
+\usepackage{txfonts}
+\usepackage{cite}
+\renewcommand{\baselinestretch}{1}
+
+%citeの括弧を全角にするおまじない
+\renewcommand{\citeleft}{\inhibitglue{}［}
+\renewcommand{\citeright}{］{}\inhibitglue}
+\makeatletter
+ \renewcommand\@biblabel[1]{\inhibitglue{}［#1］{}\inhibitglue}
+\makeatother
+
+
+\setlength{\abovecaptionskip}{0mm}
+\setlength{\belowcaptionskip}{0mm}
+
+
+\begin{document}
+
+\title{マルチエージェントシミュレーションによる不規則動詞の規則化に対する人口流入の影響\\       }
+
+\date{}
+\author{東条研究室 \\ 1310034 鈴木啓章}
+
+\maketitle % 表題
+\thispagestyle{fancy}
+ \lhead{2014年9月1日 中間審査}
+%\vspace{-20mm}
+
+
+\section{はじめに}\label{sec:intro}
+現在の日常的に用いられている不規則動詞はおおよそ180語存在し、
+会話の中に出現する動詞の約70\%が
+不規則動詞である(be, have,etc...)\cite{pinker}.これらの不規則動詞はOld English時代[AD 800 頃]に強変化動詞(strong verb)と呼ばれ主に母音が変化することによって現在形、過去形、過去分詞などの活用形が生成されていた.
+Modern Englishでは例外も含め９クラスに分類され、クラス内にも細かい分類がなされている\cite{pinker2}.
+しかし、上記の不規則動詞には単純に接尾辞[-ed]をつける規則的な活用に変化しているという現象が見受けられる.
+英語の歴史的な流れの中では、Old Englishから中期英語時代における海賊によるイングランドの侵略、ノルマン征服などの
+人口流入を伴った言語接触により不規則動詞の規則化の誘発、またその加速が起こっている.\\
+　本研究ではこの不規則動詞の規則化に対する人口流入の規模、頻度をシミュレーションによって検証することを目的とする.検証のために遺伝的アルゴリズム\cite{iba_ga}(以下GA)をベースに、エージェントコミュニケーションと変化
+を進行させるような(外圧)を組み込んだモデルを作成し、複数世代を通したシミュレーションを行う.
+
+\section{研究背景}
+本章では、英語の時代区分と、歴史から見る人口流入と言語接触の影響について説明する.
+\subsection{英語の時代区分}
+英語の年代区分は、ノルマン征服、活版印刷技術の発明など歴史的な事実を区切りに用いるが、
+3つに区切るモデルも存在すれば6から7つに区切るモデルも存在する.
+表\ref{tab:eng_div_table}に4つの時代に区切るモデル\cite{english_div}を示す.
+
+{\small
+\begin{table}[htbp]
+ \centering
+ \caption{英語の時代区分\label{tab:eng_div_table}}
+ \begin{tabular}{l|c}
+  \hline
+  A.D 500-1150 & Old English \\
+  \hline
+  A.D 1150-1450 & Middle English \\
+  \hline
+  A.D 1450-1700 & Early Modern English \\
+  \hline
+  A.D 1700- & Modern English \\
+  \hline
+\end{tabular}
+\end{table}
+}
+各時代について簡単に説明する.
+Old English時代は大ブリテン島南部でアングル、サクソン、ジュート族によって言語が確立された時期である.
+その後、ノルマン征服によってイタリック系言語であるノルマンフランス語との接触による影響が出始めた時代
+がMidle English時代である.活版印刷技術が西ヨーロッパに広がりはじめた時期がEarly Modern English時代、
+アン女王の時代以降がModern English時代となる.\\
+　\ref{sec:intro}で述べたようにの区分におけるOld English時代に母音交替によって活用していた動詞が不規則動詞
+となる.またそれ以外の動詞は弱変化動詞と呼ばれ接尾辞に[-ed]をつけて活用していた.
+
+\subsection{歴史から見る人口流入と言語接触の影響}\label{sec:lang_contact}
+本節ではOld English時代からMiddle English時代における言語接触\cite{philip}について説明する.
+まずA.D800-1066ごろにOld Englishに影響を与えたのは海賊(Viking)である.海賊はスウェーデン、ノルウェー、
+デンマークに居住していたデーン人と呼ばれる民族である.また海賊は古北欧語話者であった.この接触によって
+Old Englishでは三人称単数の語尾に[-s]をつけるようになり、強変化動詞の規則化が始まったとされている.\\
+　次にA.D1066-1345ごろのノルマン征服の影響について述べる.この接触によりノルマンフランス語からOld-Middle
+Englishに対して大量の語彙(約1万語)の流入のが起こった.また、文法などの言語構造の簡略化や、海賊の影響
+で始まった規則化傾向も上昇したと考えられている.\\
+　以上より、侵略、征服など様々な言語接触を経験していることが英語の特徴である.
+図\ref{fig:viking_nrman}に海賊が居住していた地域(青)とノルマン人によって征服された地域(赤)
+のおおよその位置を示す.図\ref{fig:viking_nrman}
+より言語接触影響の規模的にもノルマン征服が大きのではないかと予想される.
+
+\begin{figure}[htbp]
+ \centering
+ \includegraphics[width=6cm]{viking_nrman.eps}
+ \caption{海賊とノルマン人の居住、征服地域\label{fig:viking_nrman}}
+\end{figure}
+
+\section{先行研究}\label{sec:relative_work}
+本章では、コーパスを用いた統計的な研究について述べる.
+\subsection{不規則動詞の出現頻度と規則化速度}
+
+
+\section{研究内容}
+\subsection{研究の概要}\label{sec:abst}
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+\section{まとめと今後の課題}
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+{\small
+\begin{thebibliography}{9}
+\addcontentsline{toc}{section}{\refname}% 目次に追加
+ \bibitem{pinker}
+   \emph{Pinker, S. The irregular verbs. Landfall 83–85 (Autumn issue, 2000)}
+ \bibitem{pinker2}
+   \emph{Pinker, S , Prince, A. On language and connectionism: analysis of a parallel distributed processing model of language acquisition. Cognition 28,p73-193 (1988)}
+ \bibitem{iba_ga}
+   \emph{伊庭 斉志, 遺伝的アルゴリズムの基礎-GAの謎を解く オーム社(1994)}
+ \bibitem{english_div}
+   \emph{Tom McArthur, THE ENGLISH LANGUAGES, Cambridge University Press (1998), 英語系諸言語, 牧野武彦 監修, 山田 茂, 中本 恭平 訳, 三省堂 (2009)}
+ \bibitem{philip}
+   \emph{Philip Gooden, THE STORY OF ENGLISH (2009), 物語 英語の歴史, 田口孝夫 監修, 悠書館 (2012)}
+\end{thebibliography}
+}
+\end{document}

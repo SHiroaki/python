@@ -73,7 +73,7 @@ def main():
     pop = toolbox.population(n)
     #交叉も突然変異もしてないのに個体が変わる
     #ベストも変わる
-    CXPB, MUTPB, VIBPB, NGEN = 0.6, 0.1, 0.1, 150 #MUTPB =0.05が今のことろ使いやすい
+    CXPB, MUTPB, VIBPB, NGEN = 0.6, 0.1, 0.5, 150 #MUTPB =0.05が今のことろ使いやすい
     #結構突然変異起こる. 起こらないと値は揺れない
 
     #初期個体の評価
@@ -203,7 +203,7 @@ def repeatGA():
     #バイアスをかける 今のところ手動で切り替え
     #突然変異を起こす世代を指定
     
-    repeatnum = 100 #GAの繰り返し数
+    repeatnum = 10 #GAの繰り返し数
     repeat = xrange(repeatnum)
     logs = [main() for x in repeat]
     

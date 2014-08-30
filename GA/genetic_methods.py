@@ -91,7 +91,7 @@ def evaluate(ind, slope):
     #型を揃えてから数式は計算しよう
     normal_dist_bias = ((1.0/np.sqrt(2*np.pi*sigma)) * 
                         np.exp(-(float(uint_value) - myu)**2.0/2.0/sigma))
-    #return (y,)
+    return (uint_value/2.0,)
     return (1000*normal_dist_bias,)
 
 
