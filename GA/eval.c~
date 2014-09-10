@@ -1,0 +1,30 @@
+#include <stdio.h>
+#include <math.h>
+
+double normal_distribution(double, double);
+
+int main(void){
+
+  printf("hello world\n");
+  
+  double m = 0.0;
+  double s = 0.2;
+
+  normal_distribution(m, s);
+  return 0;
+
+}
+
+double normal_distribution(double myu, double sigma){
+  //normal_dist_bias = (1.0/math.sqrt(2**sigma))
+ 
+  double d, x = 2.0;
+  double coefficient, in_exp;
+  //{ return( exp( -pow( x - _mu, 2 ) / ( 2 * _var ) ) / sqrt( 2 * M_PI * _var ) );
+  
+  coefficient = sqrt(2.0 * M_PI * sigma); //係数
+  in_exp = exp(-pow(x - myu, 2) / 2.0 * sigma);  //expの肩にのるやつ
+
+  d = in_exp / coefficient;
+  printf("%2.5f\n", d);
+}

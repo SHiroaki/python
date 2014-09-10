@@ -5,10 +5,12 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 from scipy.interpolate import UnivariateSpline
+from scipy.optimize import curve_fit
 
 sigma = 25000.0
 myu = 500.0
 randomvalues = 100
+
 
 def func():
     """評価関数
@@ -18,7 +20,7 @@ def func():
     #正規分布の確率密度関数に代入
     #型を揃えてから数式は計算しよう     #ノイズを混ぜる
     def normal_dis(i):
-        v = (np.random.randn(randomvalues)/10.0 + 
+        v = (np.random.randn(randomvalues)/100.0 + 
              1000.0 * ((1.0/np.sqrt(2*np.pi*sigma)) *
                        np.exp(-(i - myu)**2.0/2.0/sigma)))
         return v
@@ -27,16 +29,17 @@ def func():
         return i **2
         
     #xdata = np.linspace(0,1000,randomvalues)
-    xdata = np.linspace(-100, 100, randomvalues)
-    #ydata = normal_dis(xdata)
-    ydata = quadratic_function(xdata)
+    xdata = np.linspace(0, 1000, randomvalues)
+    ydata = normal_dis(xdata)
+    #ydata = quadratic_function(xdata)
     #スプライン補間 sの値を指定すること
-    splinefunc = UnivariateSpline(xdata, ydata, s=1)
-    print splinefunc.derivatives(0)
+    #splinefunc = UnivariateSpline(xdata, ydata, s=1)
+    polyfitfunc = np.polyfit(xdata, ydata, 5)
+    #print splinefunc.derivatives(0)
     #xs = np.linspace(0, 1000, 1000)
-    xs = np.linspace(-100, 100, 1000)
-    ys = splinefunc(xs)    
-
+    xs = np.linspace(0, 1000, 1000)
+    ys = np.polyval(polyfitfunc, xs)    
+    print polyfitfunc
     return xdata, ydata, xs, ys
 
 def curve_fitting(x, y):

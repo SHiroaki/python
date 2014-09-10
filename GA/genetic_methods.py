@@ -4,11 +4,15 @@ import math
 import random
 import numpy as np
 import bitstring
+import _normaldist as normaldist
 from matplotlib import pyplot as plt
 from scipy.interpolate import UnivariateSpline
 import scipy.misc as scmisc
+import cbinarymethods as cbm
 
 random.seed(5) #seedを動かさなければ基本的に同じ乱数が生成されるはず.....
+UPPER_BOUND = 1000
+LOWER_BOUND = 0
 
 def g_to_p(binary_string):
     """gtype -> ptype"""
@@ -29,7 +33,7 @@ def make_indviduals(INT_MIN, INT_MAX):
     binaryobj = bitstring.BitArray(uint=ivalue, length=10)  #ここも符号なしで
     graycode = binaryobj ^ (binaryobj >> 1) #grayコードに変換
     #print ivalue, graycode.bin, binaryobj.bin
-    ind_binary = (int(x) for x in graycode.bin)
+    ind_binary = [int(x) for x in graycode.bin]
     
     return ind_binary
 
@@ -83,15 +87,16 @@ def evaluate(ind, slope):
     sigma = 30000.0
     myu = 1000.0
 
-    uint_value = g_to_p(gray_to_binary(ind))
+    uint_value = cbm.binary_to_ptype(cbm.gray_to_binary(ind))
     
-    y = (((uint_value/100.0) - 5.0)**2.0) / 100.0 #ベースの2次関数
+    #y = (((uint_value/100.0) - 5.0)**2.0) / 100.0 #ベースの2次関数
 
     #正規分布の確率密度関数に代入
     #型を揃えてから数式は計算しよう
     normal_dist_bias = ((1.0/np.sqrt(2*np.pi*sigma)) * 
                         np.exp(-(float(uint_value) - myu)**2.0/2.0/sigma))
-    return (uint_value/2.0,)
+    #normal_dist_bias = normaldist.normal_distribution(myu, sigma, float(uint_value))
+    #return (y,)
     return (1000*normal_dist_bias,)
 
 
@@ -104,12 +109,12 @@ def mutate_bigvib(individual):
     PLUS_MIN = -50
     PLUS_MAX = 50
     plusvalue = random.randint(PLUS_MIN, PLUS_MAX) #任意の値分増加させる
-    binary_notgray = gray_to_binary(individual)
-    pvalue = g_to_p(binary_notgray)
+    binary_notgray = cbm.gray_to_binary(individual)
+    pvalue = cbm.binary_to_ptype(binary_notgray)
     tmp = pvalue
     pvalue = pvalue + plusvalue 
 
-    if pvalue < 0 or pvalue > 1000:
+    if pvalue < LOWER_BOUND or pvalue > UPPER_BOUND:
         pvalue = tmp
 
     binaryobj = bitstring.BitArray(uint=pvalue, length=10)  #符号なしで    
@@ -128,8 +133,8 @@ def mutate_smallvib(individual):
     上げるか下げるかはランダムに切り替わるようにしたい(今後)
     """
 
-    binary_notgray = gray_to_binary(individual)
-    pvalue = g_to_p(binary_notgray)
+    binary_notgray = cbm.gray_to_binary(individual)
+    pvalue = cbm.binary_to_ptype(binary_notgray)
     tmp = pvalue
     #増えるか減るかはわからない(不安定な状況を再現)
     PLUS_MIN = -2
@@ -138,7 +143,7 @@ def mutate_smallvib(individual):
 
     pvalue = pvalue + plusvalue 
     
-    if pvalue < 0 or pvalue > 1000:
+    if pvalue < LOWER_BOUND or pvalue > UPPER_BOUND:
         pvalue = tmp
 
     binaryobj = bitstring.BitArray(uint=pvalue, length=10)  #符号なしで    
@@ -155,16 +160,17 @@ def get_base_bias():
     sigma = 40000.0
     myu = 500.0
     base_bias = []
-    for x in np.arange(0, 1000, 1):
-        n = ((1.0/np.sqrt(2*np.pi*sigma)) * 
-             np.exp(-(float(x) - myu)**2.0/2.0/sigma))
+    for x in np.arange(LOWER_BOUND, UPPER_BOUND, 1):
+        """n = ((1.0/np.sqrt(2*np.pi*sigma)) * 
+             np.exp(-(float(x) - myu)**2.0/2.0/sigma))"""
+        n = normaldist.normal_distribution(myu, sigma, x)
         base_bias.append(np.around(10000*n, decimals=0))
     
 
-    mutate_bias_power = xrange(0,1000, 50) #バイアス値の区切り
+    mutate_bias_power = xrange(LOWER_BOUND,UPPER_BOUND, 50) #バイアス値の区切り
     mutate_bias_gen = (xrange(50, 50+len(mutate_bias_power)))
     real_bias = [base_bias[x] for x in mutate_bias_power]
-    
+
     return mutate_bias_gen, real_bias
 
 
@@ -173,13 +179,13 @@ def mutate_bias(individual, bias, power):
     減るか増えるかは傾きの富豪で判断
     強制的に変化する方向に値を持っていく
     """
-    binary_notgray = gray_to_binary(individual)
-    pvalue = g_to_p(binary_notgray)
+    binary_notgray = cbm.gray_to_binary(individual)
+    pvalue = cbm.binary_to_ptype(binary_notgray)
     tmp = pvalue
 
     pvalue = pvalue + bias * power 
     
-    if pvalue < 0 or pvalue > 1000:
+    if pvalue < LOWER_BOUND or pvalue > UPPER_BOUND:
         pvalue = tmp
 
     binaryobj = bitstring.BitArray(uint=pvalue, length=10)  #符号なしで    
@@ -218,7 +224,7 @@ def get_plot_parametor(logdata_list):
             for x in m:
                 mm = []
                 for y in x:
-                   mm.append(g_to_p(gray_to_binary(y)))
+                   mm.append(cbm.binary_to_ptype(cbm.gray_to_binary(y)))
                 a.append(np.mean(mm))
         else:
             

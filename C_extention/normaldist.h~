@@ -1,0 +1,3 @@
+double normal_distribution(double myu, double sigma, double x);
+double *get_base_bias(double myu, double sigma, int div);
+double get_bias_gen(int div, int gen, double power);

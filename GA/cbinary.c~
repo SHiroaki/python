@@ -1,0 +1,36 @@
+#include <Python.h>
+
+static PyObject *
+fact(PyObject *self, PyObject *args)
+{
+    int n;
+    int i;
+    int ret=1;
+
+    if (!PyArg_ParseTuple(args, "i", &n))
+        return NULL;
+
+    for (i=n; i>0; i--) ret *= i;
+
+    return Py_BuildValue("i", ret);
+}
+
+static PyObject *
+hello(PyObject *self)
+{
+    printf("Hello World!!\n");
+    Py_RETURN_NONE;
+}
+
+static char ext_doc[] = "C extention module example\n";
+
+static PyMethodDef methods[] = {
+    {"hello", (PyCFunction)hello, METH_NOARGS, "print hello world.\n"},
+    {"fact", fact, METH_VARARGS, "return factorial.\n"},
+    {NULL, NULL, 0, NULL}
+};
+
+void initext(void)
+{
+    Py_InitModule3("ext", methods, ext_doc);
+}

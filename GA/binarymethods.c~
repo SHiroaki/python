@@ -1,0 +1,39 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define LOWER_BOUND    0
+#define UPPER_BOUND    1000
+
+int *make_individual(int , int);
+
+void main(){
+  //pythonで呼び出す方法をここに書く
+  make_individual(200, 200);
+}
+
+
+int *make_individual(int min_of_ind_value, int max_of_ind_value){
+
+  char binary_list[10];
+  int m,n,i;
+
+  if (min_of_ind_value < LOWER_BOUND){
+    return NULL;
+  }
+  else if (max_of_ind_value > UPPER_BOUND){
+    return NULL;
+  }
+
+  printf("%d, %d\n", min_of_ind_value, max_of_ind_value);
+
+  for (i=0; n>0; i++){
+    m=n%2;   //2で割ったあまり
+    n=n/2;  //2で割る
+    binary_list[i] = m + '0';
+    printf("%c\n", binary_list[i]);
+  }
+
+  for (i--; i>=0; i--){
+    printf("%c\n", binary_list[i]);
+  }
+}
