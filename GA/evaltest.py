@@ -16,6 +16,10 @@ def evaluate(ind):
     #uint_value = g_to_p(gray_to_binary(ind))
     #print uint_value
     y = (((uint_value/100.0) - 5.0)**2.0)  #ベースの2次関数
+    y2 = -(((uint_value/100.0) - 5.0)**2.0)+25
+    a = 1.0
+    b = 1.0
+    r = a*y + b*y2
     
     #average_curvature = np.mean(curvatures)
     #print average_curvature
@@ -25,7 +29,8 @@ def evaluate(ind):
          np.exp(-(float(uint_value) - myu)**2.0/2.0/sigma))
 
     
-    if uint_value == 200:
+    if uint_value in xrange(200, 300):
+        r = a*y + 1.2*y2
         print n
     """values = []
     
@@ -38,10 +43,15 @@ def evaluate(ind):
 
     #y = 0.01*uint_value * 100.0*normal_dist_bias #ただの直線 このままだと正規分布のバイアスは聞かない"""
     bias = 1.0 #100にすると正規分布のちからがかつ
-    #return (y,)
+    r = alpha_function(uint_value)
+    return (r,)
     print uint_value,n
     return (n,)
 
+def alpha_function(t):
+    tau=150.0
+    a = (t / tau) * np.exp(-((t - tau) / tau))
+    return a
 
 def linear(ind):
     uint_value = g_to_p(gray_to_binary(ind))
@@ -70,7 +80,7 @@ if __name__ == "__main__":
     ylist = []
     ylist2 = []
     ylist3 = []
-    for x in np.arange(-2.2, 2.2, 0.01):
+    for x in np.arange(0, 1000, 1):
         xlist.append(x)
         #binaryobj = bitstring.BitArray(uint=x, length=10)
         #graycode = binaryobj ^ (binaryobj >> 1)

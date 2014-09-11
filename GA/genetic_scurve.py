@@ -7,7 +7,7 @@ import math
 import random
 import multiprocessing
 import genetic_methods
-import bitstring
+#import bitstring
 import numpy as np
 import matplotlib.pyplot as plt
 #import cProfile
@@ -108,9 +108,7 @@ def main():
 
         #すべての個体の適応度をリストにまとめる
         fits = [ind.fitness.values for ind in pop]
-        #pop_binary = [genetic_methods.gray_to_binary(x) for x in pop]
         pop_binary = [cbm.gray_to_binary(x) for x in pop]
-        #pop_ptype = [genetic_methods.g_to_p(x) for x in pop_binary]
         pop_ptype = [cbm.binary_to_ptype(x) for x in pop_binary]
 
         
@@ -132,7 +130,7 @@ def main():
                 del child1.fitness.values
                 del child2.fitness.values
 
-        #バイアスがかかる世代を指定
+        #バイアスがかかる世代を指定 これがないとなんかグラフの縦軸が狂う
         power = 10
         if g in mt_gen:
             for mutant in offspring:
@@ -148,8 +146,6 @@ def main():
             if random.random() < VIBPB:
                 toolbox.mutate_slow(mutant)
                 del mutant.fitness.values
-
-            
 
         #Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]

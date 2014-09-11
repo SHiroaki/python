@@ -7,6 +7,46 @@
 int binaryToValue(int *);
 
 static PyObject *
+valueToGray(PyObject *self, PyObject *args)
+{
+  //return gray code
+  int i, n, m, len;
+  unsigned int num;
+  int b[MAX_BIT_LENGTH];
+  PyListObject *binary;
+  binary = (PyListObject *) PyList_New(MAX_BIT_LENGTH);
+
+  if (!PyArg_ParseTuple(args, "i", &num)){
+    return NULL;
+  }
+  n = (num >> 1) ^ num; //gray codeに変換
+
+  //2進数に変換
+  for (i=0; n>0; i++){
+    m=n%2;   //2で割ったあまり
+    n=n/2;  //2で割る
+    b[i] = m;
+  }
+
+  len = i; //整数の2進数変換した時の長さ
+
+  //10bitになるようにけつに0を追加する
+  for (i=len; i<MAX_BIT_LENGTH; i++ ){
+    b[i] = 0;
+  }
+ 
+  //逆順だったビット列を2進数の順にコピーする
+  n = 0;
+  for (i=MAX_BIT_LENGTH-1; i>=0; i--){
+  //gray に1bitずつint型の値を入れていく
+    PyList_SET_ITEM(binary, n++, Py_BuildValue("i", b[i]));
+  }
+
+  return Py_BuildValue("O", binary);
+}
+
+
+static PyObject *
 make_individual(PyObject *self, PyObject *args)
 {
 
@@ -171,6 +211,7 @@ static char ext_doc[] = "C extention module example\n";
 
 static PyMethodDef methods[] = {
   {"hello", (PyCFunction)hello, METH_NOARGS, "print hello world.\n"},
+  {"value_to_gray", valueToGray, METH_VARARGS, "return gray obj.\n"},
   {"make_individual", make_individual, METH_VARARGS, "return gray code.\n"},
   {"gray_to_binary", grayToBinary, METH_VARARGS, "return binary code.\n"},
   {"binary_to_ptype", binaryToPtype, METH_VARARGS, "return ptype value.\n"},

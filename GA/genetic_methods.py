@@ -13,9 +13,9 @@ import cbinarymethods as cbm
 random.seed(5) #seedを動かさなければ基本的に同じ乱数が生成されるはず.....
 UPPER_BOUND = 1000
 LOWER_BOUND = 0
-
+"""
 def g_to_p(binary_string):
-    """gtype -> ptype"""
+    #gtype -> ptype
     
     #bitのリストを文字列に変換
     ind_string = "0b" + "".join(map(str, binary_string)) 
@@ -24,9 +24,9 @@ def g_to_p(binary_string):
     return ptype_value 
 
 def make_indviduals(INT_MIN, INT_MAX):
-    """ランダムな整数を得る"""
-    """[bitstring.obj, bitstring.obj, ....]を返す. bitstring.obj.int
-    で整数を得る.有効数字３桁でとろう"""
+    #ランダムな整数を得る
+    #[bitstring.obj, bitstring.obj, ....]を返す. bitstring.obj.int
+    #で整数を得る.有効数字３桁でとろう
 
     #random.seed() #乱数生成器を初期化
     ivalue = random.randint(INT_MIN, INT_MAX)
@@ -38,8 +38,8 @@ def make_indviduals(INT_MIN, INT_MAX):
     return ind_binary
 
 def gray_to_binary(gray_string):
-    """グレイコード(list)を受け取り２進数(list)に変換する
-    """
+    #グレイコード(list)を受け取り２進数(list)に変換する
+    
     binary_list = []
     binary_list.append(gray_string[0]) #先頭bitはそのまま
 
@@ -72,7 +72,7 @@ def get_slopes_change(x_points, slopes):
     #傾きの変化の平均を求める
     for i, x in enumerate(x_points):
         print i ,x, slopes[i]
-
+"""
 
 # multi pool用のラッパー
 def wrapper_evaluate(args):
@@ -97,6 +97,10 @@ def evaluate(ind, slope):
                         np.exp(-(float(uint_value) - myu)**2.0/2.0/sigma))
     #normal_dist_bias = normaldist.normal_distribution(myu, sigma, float(uint_value))
     #return (y,)
+    tau=200.0
+    t = uint_value
+    a = (t / tau) * np.exp(-((t - tau) / tau))
+    return (a,)
     return (1000*normal_dist_bias,)
 
 
@@ -146,9 +150,9 @@ def mutate_smallvib(individual):
     if pvalue < LOWER_BOUND or pvalue > UPPER_BOUND:
         pvalue = tmp
 
-    binaryobj = bitstring.BitArray(uint=pvalue, length=10)  #符号なしで    
-    graycode = binaryobj ^ (binaryobj >> 1) #grayコードに変換
-    swaped_binary = [int(x) for x in graycode.bin]
+    #binaryobj = bitstring.BitArray(uint=pvalue, length=10)  #符号なしで    
+    grayobj = cbm.value_to_gray(pvalue)
+    swaped_binary = [int(x) for x in grayobj]
     
     #増加させたbit列に交換する
     for i in xrange(len(individual)):
@@ -181,17 +185,16 @@ def mutate_bias(individual, bias, power):
     """
     binary_notgray = cbm.gray_to_binary(individual)
     pvalue = cbm.binary_to_ptype(binary_notgray)
+
     tmp = pvalue
 
     pvalue = pvalue + bias * power 
     
     if pvalue < LOWER_BOUND or pvalue > UPPER_BOUND:
         pvalue = tmp
-
-    binaryobj = bitstring.BitArray(uint=pvalue, length=10)  #符号なしで    
-    graycode = binaryobj ^ (binaryobj >> 1) #grayコードに変換
-    swaped_binary = [int(x) for x in graycode.bin]
-    
+    pvalue = int(pvalue)
+    grayobj = cbm.value_to_gray(pvalue)
+    swaped_binary = [int(x) for x in grayobj]    
     #増加させたbit列に交換する
     for i in xrange(len(individual)):
         individual[i] = swaped_binary[i]
