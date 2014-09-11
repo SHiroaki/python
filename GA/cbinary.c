@@ -19,8 +19,9 @@ make_individual(PyObject *self, PyObject *args)
   PyListObject *gray; //pythonのlistオブジェクトを表現
   gray = (PyListObject *) PyList_New(MAX_BIT_LENGTH); //サイズがMAX~のリストを作る
 
-  if (!PyArg_ParseTuple(args, "ii", &min, &max)) //引数が複数の時はiiみたいに並べて書く
-        return NULL;
+  if (!PyArg_ParseTuple(args, "ii", &min, &max)){ //引数が複数の時はiiみたいに並べて書く
+    return NULL;
+  }
 
   if (min < LOWER_BOUND){
     exit(0);
@@ -51,12 +52,10 @@ make_individual(PyObject *self, PyObject *args)
   n = 0;
   for (i=MAX_BIT_LENGTH-1; i>=0; i--){
   //gray に1bitずつint型の値を入れていく
- 
-  PyList_SET_ITEM(gray, n++, Py_BuildValue("i", b[i]));
+    PyList_SET_ITEM(gray, n++, Py_BuildValue("i", b[i]));
   }
 
   return Py_BuildValue("O", gray);
-
 }
 
 static PyObject *
@@ -71,21 +70,21 @@ grayToBinary(PyObject *self, PyObject *args)
   PyObject *get_list;
   binary = (PyListObject *) PyList_New(MAX_BIT_LENGTH); 
 
-  if (!PyArg_ParseTuple(args, "O", &get_list )) 
+  if (!PyArg_ParseTuple(args, "O", &get_list )){
     return NULL;
-
-  if PyList_Check(get_list) {
-  for (i=0; i<PyList_Size(get_list); i++){
-  //リストオブジェクトの中身をCで見れるように変換しながら取り出す?(自信なし)
-      inputed_binary[i] = PyInt_AsSsize_t(PyList_GetItem(get_list, (Py_ssize_t)i)); //ok
-    }
   }
-
+  if PyList_Check(get_list) {
+      for (i=0; i<PyList_Size(get_list); i++){
+	//リストオブジェクトの中身をCで見れるように変換しながら取り出す?(自信なし)
+	inputed_binary[i] = PyInt_AsSsize_t(PyList_GetItem(get_list, (Py_ssize_t)i)); //ok
+      }
+    }
+  
   num = binaryToValue(inputed_binary);
   
   for (mask = num >> 1; mask != 0; mask = mask >> 1){
-  //gray codeから元に戻す
-  num = num ^ mask;
+    //gray codeから元に戻す
+    num = num ^ mask;
   }
   
   n = num;
@@ -102,13 +101,12 @@ grayToBinary(PyObject *self, PyObject *args)
   for (i=len; i<MAX_BIT_LENGTH; i++ ){
     b[i] = 0;
   }
- 
+  
   //逆順だったビット列を2進数の順にコピーする
   n = 0;
   for (i=MAX_BIT_LENGTH-1; i>=0; i--){
-  //binary に1bitずつint型の値を入れていく
- 
-  PyList_SET_ITEM(binary, n++, Py_BuildValue("i", b[i]));
+    //binary に1bitずつint型の値を入れていく
+    PyList_SET_ITEM(binary, n++, Py_BuildValue("i", b[i]));
   }
 
   return Py_BuildValue("O", binary);
@@ -121,11 +119,11 @@ int binaryToValue(int *b){
   i=0; n=0;
 
   while(i < MAX_BIT_LENGTH){
-  if (b[i] == 1) n+=1;
-  i+=1;
-  if (i == MAX_BIT_LENGTH) break;
-  n=n*2;
-  //printf("%d\n", n);
+    if (b[i] == 1) n+=1;
+    i+=1;
+    if (i == MAX_BIT_LENGTH) break;
+    n=n*2;
+    //printf("%d\n", n);
   }
   return n;
 }
@@ -139,23 +137,24 @@ binaryToPtype(PyObject *self, PyObject *args)
   PyListObject *binary; //pythonのlistオブジェクトを表現
   PyObject *get_list;
 
-  if (!PyArg_ParseTuple(args, "O", &get_list )) //pythonオブジェクトをそのまま渡す
+  if (!PyArg_ParseTuple(args, "O", &get_list )){ //pythonオブジェクトをそのまま渡す
     return NULL;
-
-  if PyList_Check(get_list) {
-  for (i=0; i<PyList_Size(get_list); i++){
-      inputed_binary[i] = PyInt_AsSsize_t(PyList_GetItem(get_list, (Py_ssize_t)i)); //ok
-    }
   }
-
+  
+  if PyList_Check(get_list) {
+      for (i=0; i<PyList_Size(get_list); i++){
+	inputed_binary[i] = PyInt_AsSsize_t(PyList_GetItem(get_list, (Py_ssize_t)i)); //ok
+      }
+    }
+  
   i=0; n=0;
 
   while(i < MAX_BIT_LENGTH){
-  if (inputed_binary[i] == 1) n+=1;
-  i+=1;
-  if (i == MAX_BIT_LENGTH) break;
-  n=n*2;
-  //printf("%d\n", n);
+    if (inputed_binary[i] == 1) n+=1;
+    i+=1;
+    if (i == MAX_BIT_LENGTH) break;
+    n=n*2;
+    //printf("%d\n", n);
   }
   return Py_BuildValue("i", n);
 }
@@ -172,10 +171,10 @@ static char ext_doc[] = "C extention module example\n";
 
 static PyMethodDef methods[] = {
   {"hello", (PyCFunction)hello, METH_NOARGS, "print hello world.\n"},
-    {"make_individual", make_individual, METH_VARARGS, "return gray code.\n"},
-      {"gray_to_binary", grayToBinary, METH_VARARGS, "return binary code.\n"},
-	{"binary_to_ptype", binaryToPtype, METH_VARARGS, "return ptype value.\n"},
-	{NULL, NULL, 0, NULL}
+  {"make_individual", make_individual, METH_VARARGS, "return gray code.\n"},
+  {"gray_to_binary", grayToBinary, METH_VARARGS, "return binary code.\n"},
+  {"binary_to_ptype", binaryToPtype, METH_VARARGS, "return ptype value.\n"},
+  {NULL, NULL, 0, NULL}
 };
 
 void initcbinarymethods(void)
