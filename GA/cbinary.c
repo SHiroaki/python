@@ -1,12 +1,10 @@
 #include <Python.h>
 
-
 #define LOWER_BOUND    0
 #define UPPER_BOUND    1000
 #define MAX_BIT_LENGTH 10
 
 int binaryToValue(int *);
-
 
 static PyObject *
 make_individual(PyObject *self, PyObject *args)
@@ -84,8 +82,9 @@ grayToBinary(PyObject *self, PyObject *args)
   }
 
   num = binaryToValue(inputed_binary);
- 
+  
   for (mask = num >> 1; mask != 0; mask = mask >> 1){
+  //gray codeから元に戻す
   num = num ^ mask;
   }
   
@@ -115,6 +114,7 @@ grayToBinary(PyObject *self, PyObject *args)
   return Py_BuildValue("O", binary);
 }
 
+
 int binaryToValue(int *b){
   //2進数を整数に変換する
   int i,n;
@@ -131,7 +131,7 @@ int binaryToValue(int *b){
 }
 
 static PyObject *
-binary_to_p(PyObject *self, PyObject *args)
+binaryToPtype(PyObject *self, PyObject *args)
 {
 
   int i,n;
@@ -174,7 +174,7 @@ static PyMethodDef methods[] = {
   {"hello", (PyCFunction)hello, METH_NOARGS, "print hello world.\n"},
     {"make_individual", make_individual, METH_VARARGS, "return gray code.\n"},
       {"gray_to_binary", grayToBinary, METH_VARARGS, "return binary code.\n"},
-	{"binary_to_ptype", binary_to_p, METH_VARARGS, "return ptype value.\n"},
+	{"binary_to_ptype", binaryToPtype, METH_VARARGS, "return ptype value.\n"},
 	{NULL, NULL, 0, NULL}
 };
 
