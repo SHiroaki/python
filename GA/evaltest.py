@@ -10,8 +10,8 @@ def evaluate(ind):
     """評価関数
     bit(graycode)のlist & n世代分の曲率 -> 評価値計算 -> (float)評価値返却
     """
-    sigma = 0.20
-    myu = 0.0
+    sigma = 80000
+    myu = 500
     uint_value = ind
     #uint_value = g_to_p(gray_to_binary(ind))
     #print uint_value
@@ -29,10 +29,10 @@ def evaluate(ind):
          np.exp(-(float(uint_value) - myu)**2.0/2.0/sigma))
 
     
-    if uint_value in xrange(200, 300):
+    """if uint_value in xrange(200, 300):
         r = a*y + 1.2*y2
         print n
-    """values = []
+    values = []
     
     for myu in myus:
         
@@ -44,9 +44,9 @@ def evaluate(ind):
     #y = 0.01*uint_value * 100.0*normal_dist_bias #ただの直線 このままだと正規分布のバイアスは聞かない"""
     bias = 1.0 #100にすると正規分布のちからがかつ
     r = alpha_function(uint_value)
-    return (r,)
-    print uint_value,n
-    return (n,)
+    # return (r,)
+    print round(n, 5)*100000
+    return (round(n, 5)*100000,)
 
 def alpha_function(t):
     tau=150.0

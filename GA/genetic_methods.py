@@ -13,6 +13,7 @@ import cbinarymethods as cbm
 random.seed(5) #seedを動かさなければ基本的に同じ乱数が生成されるはず.....
 UPPER_BOUND = 1000
 LOWER_BOUND = 0
+
 """
 def g_to_p(binary_string):
     #gtype -> ptype
@@ -49,6 +50,7 @@ def gray_to_binary(gray_string):
 
     #print binary_list ok
     return binary_list
+"""
 
 def calc_curvature(func, d_point=0):
     #曲率半径、曲率を求める
@@ -61,18 +63,6 @@ def calc_curvature(func, d_point=0):
 
     return curvature_of_func
 
-def get_slope(func, points):
-    #渡された曲線の微分
-    d_point = np.mean(points)
-    print d_point
-    slope = scmisc.derivative(func, d_point, n=1, dx=1e-6)
-    return slope
-
-def get_slopes_change(x_points, slopes):
-    #傾きの変化の平均を求める
-    for i, x in enumerate(x_points):
-        print i ,x, slopes[i]
-"""
 
 # multi pool用のラッパー
 def wrapper_evaluate(args):
@@ -84,7 +74,7 @@ def evaluate(ind, slope):
     bit(graycode)のlist & n世代分の曲率 -> 評価値計算 -> (float)評価値返却
     """
     #myus = np.linspace(0, 1000, 100)
-    sigma = 30000.0
+    sigma = 25000.0
     myu = 1000.0
 
     uint_value = cbm.binary_to_ptype(cbm.gray_to_binary(ind))
@@ -100,8 +90,43 @@ def evaluate(ind, slope):
     tau=200.0
     t = uint_value
     a = (t / tau) * np.exp(-((t - tau) / tau))
-    return (a,)
+    #return (a,)
     return (1000*normal_dist_bias,)
+
+def change_pvalue(individual, intvalue):
+    """固体のPTYPEを上下させる
+    個体(GTYPE) -> PTYPEを上昇 -> return 個体(GTYPE)
+    上げるか下げるかはランダムに切り替わるようにしたい(今後)
+    1024以上になった場合、０以下になった場合の処理を追加する()
+    """
+
+    binary_notgray = cbm.gray_to_binary(individual)
+    pvalue = cbm.binary_to_ptype(binary_notgray)
+    tmp = pvalue
+    pvalue = pvalue + intvalue
+
+    if pvalue < LOWER_BOUND or pvalue > UPPER_BOUND:
+        pvalue = tmp
+
+    swaped_binary = cbm.value_to_gray(pvalue)
+    
+    #増加させたbit列に交換する
+    for i in xrange(len(individual)):
+        individual[i] = swaped_binary[i]
+    
+    return individual,
+
+def int_generator():
+    # 加減どちらにも対応させたいのならyieldする値をランダムにする
+    # その時プラスマイナスで値の幅を制限して、年代を経るごとに
+    # 幅を調整する. バイアスにも使えそう
+    # 一番影響あるのはstep、stepが大きければ変化も当然大きくなる
+
+    int_min = 1
+    int_max = 10000
+    step = 5
+    for x in np.arange(int_min, int_max, step):
+        yield x
 
 
 def mutate_bigvib(individual):
@@ -110,7 +135,7 @@ def mutate_bigvib(individual):
     上げるか下げるかはランダムに切り替わるようにしたい(今後)
     1024以上になった場合、０以下になった場合の処理を追加する()
     """
-    PLUS_MIN = -50
+    PLUS_MIN = 50
     PLUS_MAX = 50
     plusvalue = random.randint(PLUS_MIN, PLUS_MAX) #任意の値分増加させる
     binary_notgray = cbm.gray_to_binary(individual)
@@ -121,10 +146,7 @@ def mutate_bigvib(individual):
     if pvalue < LOWER_BOUND or pvalue > UPPER_BOUND:
         pvalue = tmp
 
-    binaryobj = bitstring.BitArray(uint=pvalue, length=10)  #符号なしで    
-    graycode = binaryobj ^ (binaryobj >> 1) #grayコードに変換
-    swaped_binary = [int(x) for x in graycode.bin]
-    
+    swaped_binary = cbm.value_to_gray(pvalue)
     #増加させたbit列に交換する
     for i in xrange(len(individual)):
         individual[i] = swaped_binary[i]
@@ -141,8 +163,8 @@ def mutate_smallvib(individual):
     pvalue = cbm.binary_to_ptype(binary_notgray)
     tmp = pvalue
     #増えるか減るかはわからない(不安定な状況を再現)
-    PLUS_MIN = -2
-    PLUS_MAX = 2
+    PLUS_MIN = -1 # 下限を大きくすれば変化はしにくくなる
+    PLUS_MAX = 1
     plusvalue = random.randint(PLUS_MIN, PLUS_MAX) #任意の値分増加させる
 
     pvalue = pvalue + plusvalue 
@@ -150,9 +172,7 @@ def mutate_smallvib(individual):
     if pvalue < LOWER_BOUND or pvalue > UPPER_BOUND:
         pvalue = tmp
 
-    #binaryobj = bitstring.BitArray(uint=pvalue, length=10)  #符号なしで    
-    grayobj = cbm.value_to_gray(pvalue)
-    swaped_binary = [int(x) for x in grayobj]
+    swaped_binary = cbm.value_to_gray(pvalue)
     
     #増加させたbit列に交換する
     for i in xrange(len(individual)):
@@ -192,6 +212,7 @@ def mutate_bias(individual, bias, power):
     
     if pvalue < LOWER_BOUND or pvalue > UPPER_BOUND:
         pvalue = tmp
+
     pvalue = int(pvalue)
     grayobj = cbm.value_to_gray(pvalue)
     swaped_binary = [int(x) for x in grayobj]    
@@ -247,8 +268,7 @@ if __name__ == "__main__":
     ylist = []
     sigma = 25000
     myu = 500
-
-    #exit()
+    
     #f = open("res.txt","w")
     for x in np.arange(0., 1000., 1):
         xlist.append(x)
